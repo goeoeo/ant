@@ -65,7 +65,7 @@ func GetStructTV(obj interface{})(reflect.Type,reflect.Value,error) {
 }
 
 //获取获取结构体中structTag中函数参数内容
-func GetStructTagFuncName(structTag reflect.StructTag,field string,funcName string) string {
+func GetStructTagFuncContent(structTag reflect.StructTag,field string,funcName string) string {
 	tag:=structTag.Get(field)
 
 	re := regexp.MustCompile(fmt.Sprintf(`%s\(([^(]*)\)`,funcName))

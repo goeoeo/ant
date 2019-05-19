@@ -28,7 +28,7 @@ func Md5(buf []byte) string {
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
-//ip转换函数
+//ip转换函数,字符串转数字
 func Ip2Long(ipstr string) (ip uint32) {
 	r := `^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})`
 	reg, err := regexp.Compile(r)
@@ -57,7 +57,7 @@ func Ip2Long(ipstr string) (ip uint32) {
 	return
 }
 
-//ip转换函数
+//ip转换函数,数字转字符串
 func Long2Ip(ip uint32) string {
 	return fmt.Sprintf("%d.%d.%d.%d", ip>>24, ip<<8>>24, ip<<16>>24, ip<<24>>24)
 }
@@ -74,7 +74,7 @@ func RandomString(num int) string {
 }
 
 
-//字符串加法，保留0号位
+//保留左边0的字符串加法
 //001+1=002
 func Keep0Add(s string, sep int) string {
 	//必须全数字

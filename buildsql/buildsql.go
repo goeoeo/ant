@@ -332,7 +332,7 @@ func GetTableNameFromModel(model interface{}) (string, error) {
 	}
 
 	for i := 0; i < objT.NumField(); i++ {
-		tableName =reflectutil.GetStructTagFuncName(objT.Field(i).Tag,"orm","table")
+		tableName =reflectutil.GetStructTagFuncContent(objT.Field(i).Tag,"orm","table")
 		if tableName!= "" {
 			break
 		}
@@ -487,7 +487,7 @@ func (this *BuildSql) Limit(params ...int) *BuildSql {
 	if len(params) == 1 {
 		this.limit = fmt.Sprintf(" LIMIT %d ", params[0])
 	} else if len(params) == 2 {
-		this.limit = fmt.Sprintf(" LIMIT %d OFFSET %d", params[1], params[0])
+		this.limit = fmt.Sprintf(" LIMIT %d OFFSET %d", params[0], params[1])
 
 	}
 
