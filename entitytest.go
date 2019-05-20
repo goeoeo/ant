@@ -4,8 +4,8 @@ package ant
 
 //股票最新数据模型
 type StockHsas struct {
-	Id               int     `orm:"column(id);table(rms_hsas)" valid:"name(Id);Max(20)" `
-	Code             string  `orm:"column(code)" valid:"name(股票代码)"`               //股票代码
+	Id               int     `orm:"column(id);table(rms_hsas)" valid:"Name(Id);Max(20);Min(5)" `
+	Code             string  `orm:"column(code)" valid:"Name(股票代码)"`               //股票代码
 	Name             string  `orm:"column(name)"`               //股票名称
 	Date             string  `orm:"column(date)"`               //日期
 	OpenToday        float64 `orm:"column(open_today)"`         //今开
