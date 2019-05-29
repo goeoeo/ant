@@ -110,3 +110,31 @@ func GetNotEmptyFields(obj interface{}, fields ...string) []string {
 	}
 	return fields
 }
+
+//slice interface 变数组
+func ToSlice(arr interface{}) []interface{} {
+	v := reflect.ValueOf(arr)
+	if v.Kind() != reflect.Slice {
+		return []interface{}{}
+	}
+	l := v.Len()
+	ret := make([]interface{}, l)
+	for i := 0; i < l; i++ {
+		ret[i] = v.Index(i).Interface()
+	}
+	return ret
+}
+
+//强大的join
+func Join(arr interface{},sep string) string{
+	res:=ToSlice(arr)
+
+	str:=""
+	for _,v:=range res {
+		if tmpStr,ok:=v.(string);ok{
+			str+=tmpStr+sep
+		}
+	}
+
+	return strings.TrimRight(str,sep)
+}
