@@ -338,10 +338,10 @@ func Mac(validValue interface{}, params ...string) bool {
 	return false
 }
 
-//中文,数字,字母,
+//中文,数字,字母,下划线
 func ChnDash(validValue interface{}, params ...string) bool {
 	if str, ok := validValue.(string); ok {
-		re := regexp.MustCompile("^[\u4e00-\u9fa50-9a-zA-Z-_]+$")
+		re := regexp.MustCompile("^[\u4e00-\u9fa50-9a-zA-Z_]+$")
 		return re.MatchString(str)
 	}
 

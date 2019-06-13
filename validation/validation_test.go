@@ -20,8 +20,7 @@ func TestValidation_Require(t *testing.T) {
 	t.Log("零值,必填验证,通过")
 
 	a.Code="111"
-	//非零值
-	err=v.Clear().Valid(a)
+	err=v.Valid(a)
 	if err != nil {
 		t.Error("非零值,必填验证,失败")
 	}

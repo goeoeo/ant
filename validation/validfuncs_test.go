@@ -19,7 +19,6 @@ func TestMax(t *testing.T) {
 
 	//非零值,小于最大值验证
 	a.Id= 9
-	err=v.Clear().Valid(a)
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,7 +27,6 @@ func TestMax(t *testing.T) {
 
 	//非零值,小于最大值验证
 	a.Id= 20
-	err=v.Clear().Valid(a)
 	if err != nil {
 		t.Error(err)
 	}
@@ -36,7 +34,6 @@ func TestMax(t *testing.T) {
 
 	//非零值,大于最大值
 	a.Id= 21
-	err=v.Clear().Valid(a)
 	if err != nil {
 		t.Log("非零值,大于最大值验证,通过")
 	}

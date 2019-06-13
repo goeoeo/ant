@@ -1,5 +1,7 @@
 package ant
 
+import "time"
+
 //测试需要的结构体
 
 //股票最新数据模型
@@ -26,4 +28,21 @@ type StockParse struct {
 	Id               int     `orm:"column(id);table(rms_parse)" `
 	Code             string  `orm:"column(code)"`               //股票代码
 	Name             string  `orm:"column(name)"`               //股票名称
+}
+
+type User struct {
+	Id         int       `orm:"size(11);column(id);"`
+	UserName   string    `field:"账号" orm:"size(50);column(username)"`                                                     //用户名：代理商、代理商员工（手机号登录），管理员、运营商、网吧（账号登录）
+	Password   string    `orm:"size(50);column(password)"`                                                     //密码
+	Salt       string    `orm:"size(32);column(salt)"`                                                         //密码加密盐
+	Name       string    `field:"姓名" orm:"size(50);column(name)" valid:"Chn;MinSize(2);MaxSize(12);Sensitive"` //姓名
+	UserType   int       `orm:"size(4);column(user_type)"`                                                     //用户类型：1=超级管理员，2=平台管理员，3=运营商，4=代理商，5=代理商员工，6=网吧
+	Mobile     string    `field:"手机号" orm:"size(15);column(mobile)" valid:"Mobile"`                            //手机号码
+	Email      string    `field:"邮箱" orm:"size(50);column(email) " valid:"Email"`                              //邮箱
+	Memo       string    `field:"备注" orm:"size(255);column(memo)" valid:"MaxSize(20);Sensitive"`               //备注
+	Status     int       `orm:"size(4);column(status)"`                                                        //状态：1=可用，2=禁用
+	LastIp     string    `orm:"size(15);column(last_ip)"`                                                      //最后登录ip
+	CreateTime time.Time `orm:"auto_now_add;type(datetime);column(create_time)"`                               //创建时间
+	UpdateTime time.Time `orm:"auto_now_add;type(datetime);column(update_time)"`                               //更新时间
+
 }
