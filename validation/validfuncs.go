@@ -11,24 +11,31 @@ import (
 
 //验证函数未通过,对应的错误提示
 var MessageTmpls = map[string]string{
-	"Required":     "不能为空",
-	"Max":          "最大为%v",
-	"Min":          "最小为%v",
-	"Range":        "范围为%v到%v",
-	"MinSize":      "最小长度为%v",
-	"MaxSize":      "最大长度为%v",
-	"Length":       "长度必须为%v",
-	"Alpha":        "必须为字母",
-	"Numeric":      "必须为数字",
-	"AlphaNumeric": "必须为字母、数字",
-	"AlphaDash":    "必须为字母、数字、-或_",
-	"Email":        "必须为有效的邮箱地址",
-	"IP":           "必须为有效的IP地址",
-	"Mobile":       "必须为有效的手机号码",
-	"Tel":          "必须为有效的固定电话",
-	"ZipCode":      "必须为有效的邮政编码",
-	"Mac":          "必须为有效的Mac地址",
-	"ChnDash":      "必须为汉字、字母、数字、-或_",
+	"Required":        "不能为空",
+	"Max":             "最大为%v",
+	"Min":             "最小为%v",
+	"Range":           "范围为%v到%v",
+	"MinSize":         "最小长度为%v",
+	"MaxSize":         "最大长度为%v",
+	"Length":          "长度必须为%v",
+	"Alpha":           "必须为字母",
+	"Numeric":         "必须为数字",
+	"AlphaNumeric":    "必须为字母、数字",
+	"AlphaDash":       "必须为字母、数字、-或_",
+	"Email":           "必须为有效的邮箱地址",
+	"IP":              "必须为有效的IP地址",
+	"Mobile":          "必须为有效的手机号码",
+	"Tel":             "必须为有效的固定电话",
+	"ZipCode":         "必须是有效的zipcode",
+	"UploadExt":       "文件后缀名只能为 %v",
+	"UploadSize":      "文件大小不能超过 %dMB",
+	"Mac":             "必须是有效的mac地址",
+	"SpecialChar":     "不允许字符包括`~!@#$%^&*()=+[]{}\\|;:.'\",<>/?",
+	"RuneLength":      "不能超过15个字符",
+	"ChnDash":         "只支持数字,字母,汉字,-或_的组合",
+	"ChnAlphaNumeric": "只支持数字,字母,汉字的组合",
+	"Chn":             "只支持汉字",
+	"Sensitive":       "中包含敏感词：%s，请修改。",
 }
 
 //限制数字最大值
@@ -278,7 +285,7 @@ func AlphaNumeric(validValue interface{}, params ...string) bool {
 //alpha 字符或数字或横杠 -_，有效类型：string，
 func AlphaDash(validValue interface{}, params ...string) bool {
 	if str, ok := validValue.(string); ok {
-		alphaDashPattern := regexp.MustCompile(`[^\d\w-_]`)
+		alphaDashPattern := regexp.MustCompile(`^[\d\w-_]+$`)
 		return alphaDashPattern.MatchString(str)
 	}
 	return false
@@ -341,10 +348,20 @@ func Mac(validValue interface{}, params ...string) bool {
 //中文,数字,字母,下划线
 func ChnDash(validValue interface{}, params ...string) bool {
 	if str, ok := validValue.(string); ok {
-		re := regexp.MustCompile("^[\u4e00-\u9fa50-9a-zA-Z_]+$")
+		re := regexp.MustCompile("^[\u4e00-\u9fa50-9a-zA-Z_-]+$")
 		return re.MatchString(str)
 	}
 
 	return false
 
+}
+
+//中文,数字,字母
+func ChnAlphaNumeric(validValue interface{}, params ...string) bool {
+	if str, ok := validValue.(string); ok {
+		re := regexp.MustCompile("^[\u4e00-\u9fa50-9a-zA-Z]+$")
+		return re.MatchString(str)
+	}
+
+	return false
 }
