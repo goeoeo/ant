@@ -1,7 +1,7 @@
 package uniqueparse
 
 import (
-	"ant/reflectutil"
+	"github.com/phpdi/ant/reflectutil"
 	"fmt"
 	"regexp"
 	"strings"

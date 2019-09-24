@@ -1,7 +1,7 @@
 package rbac
 
 import (
-	"ant/reflectutil"
+	"github.com/phpdi/ant/reflectutil"
 	"errors"
 	"github.com/astaxie/beego/cache"
 	"github.com/astaxie/beego/logs"

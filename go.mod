@@ -1,4 +1,4 @@
-module ant
+module github.com/phpdi/ant
 
 require (
 	github.com/astaxie/beego v1.11.1

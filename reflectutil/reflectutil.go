@@ -1,7 +1,7 @@
 package reflectutil
 
 import (
-	"ant/stringutil"
+	"github.com/phpdi/ant/stringutil"
 	"fmt"
 	"reflect"
 	"regexp"
