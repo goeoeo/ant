@@ -138,3 +138,16 @@ func Join(arr interface{},sep string) string{
 
 	return strings.TrimRight(str,sep)
 }
+
+func InArray(item interface{},arr interface{}) bool {
+	arrSlice:=ToSlice(arr)
+	
+	for _,v:=range arrSlice {
+		if reflect.DeepEqual(item, v) {
+			return true
+		}
+	}
+
+	return false
+
+}
