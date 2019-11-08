@@ -3,93 +3,161 @@ package page
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 	"time"
 )
 
-//排序结构体
-type Sort struct {
-	SortField string //排序字段
-	SortVal   int    //0=不排序，1=升序，2=降序
+
+
+type sortField struct {
+	field string //排序字段
+	val   string //aes=升序，desc=降序
 }
 
 const (
-	SortValNot  = 0
-	SortValAsc  = 1
-	SortValDesc = 2
+	aes="aes"
+	desc="desc"
 )
 
-//排序
-func (this *Sort) SortSlice(slicePtr interface{}) error {
-	//不进行排序
-	if this.SortVal == SortValNot || slicePtr == nil {
-		return nil
-	}
+//多字段排序
+//SliceSort([]User ,"Name desc,Id aes"})
+func SortSlice(slicePtr interface{}, sortFields string/* Field Aes */) error {
 
 	var (
+		err error
+		sortFieldSlice []sortField
 		arrSlice []interface{}
-		err      error
-		content  []byte
+		content []byte
 	)
 
-	if arrSlice, err = this.toSlice(slicePtr); err != nil {
+	if sortFieldSlice,err=parseField(sortFields);err!= nil {
 		return err
 	}
 
+	//没有排序字段
+	if len(sortFieldSlice)== 0 {
+		return nil
+	}
+	//
+	//aHdr := (*reflect.SliceHeader)(slicePtr)
+	//cHdr := (*reflect.SliceHeader)(unsafe.Pointer(&arrSlice))
+	//*cHdr=*aHdr
+	//
+	//*(*reflect.SliceHeader)(unsafe.Pointer(&slicePtr))=*(*reflect.SliceHeader)(unsafe.Pointer(&arrSlice))
+	//
+	//arrSlice=*(*[]interface{})(unsafe.Pointer(&slicePtr))
+
+	//fmt.Printf("===>%v\n",slicePtr)
+	//
+	//fmt.Printf("===>%v\n",len(arrSlice))
+	//return nil
+	if arrSlice, err = toSlice(slicePtr); err != nil {
+		return err
+	}
+
+	//执行排序
 	sort.Slice(arrSlice, func(i, j int) bool {
-		//升序
-		a := this.getObjVal(arrSlice[i], this.SortField)
-		b := this.getObjVal(arrSlice[j], this.SortField)
 
-		switch this.SortVal {
-		case SortValAsc:
+		for _,v:=range sortFieldSlice {
+			a := getObjVal(arrSlice[i],v.field)
+			b := getObjVal(arrSlice[j],v.field)
 
-			switch at := a.(type) {
-			case string:
-
-				bt, _ := b.(string)
-				return at < bt
-			case int64:
-				bt, _ := b.(int64)
-				return at < bt
-			case uint64:
-				bt, _ := b.(uint64)
-				return at < bt
-			}
-			return false
-
-		case SortValDesc:
-			//降序
-			switch at := a.(type) {
-			case string:
-				bt, _ := b.(string)
-				return at > bt
-			case int64:
-				bt, _ := b.(int64)
-				return at > bt
-			case uint64:
-				bt, _ := b.(uint64)
-				return at > bt
+			//当前排序字段值相等跳过
+			if reflect.DeepEqual(a,b) {
+				continue
 			}
 
-			return false
+			switch v.val {
+			case aes:
 
-		default:
-			return false
+				switch at := a.(type) {
+				case string:
+
+					bt, _ := b.(string)
+					return at < bt
+				case int64:
+					bt, _ := b.(int64)
+					return at < bt
+				case uint64:
+					bt, _ := b.(uint64)
+					return at < bt
+				}
+				return false
+
+			case desc:
+				//降序
+				switch at := a.(type) {
+				case string:
+					bt, _ := b.(string)
+					return at > bt
+				case int64:
+					bt, _ := b.(int64)
+					return at > bt
+				case uint64:
+					bt, _ := b.(uint64)
+					return at > bt
+				}
+
+				return false
+			}
+
 		}
+
+		return false
+
 	})
 
-	if content, err = json.Marshal(arrSlice); err != nil {
+
+	//将排序内容转回去
+	if content,err=json.Marshal(arrSlice);err!= nil {
 		return err
 	}
 
-	return json.Unmarshal(content, slicePtr)
+	//slicePtr=unsafe.Pointer(&arrSlice)
+
+	return json.Unmarshal(content,slicePtr)
 
 }
 
+//解析排序字段
+func parseField(sortFields string) (sortFieldsSlice []sortField,err error) {
+	var (
+		sortFieldsArr []string
+	)
+	sortFieldsArr=strings.Split(sortFields,",")
+
+	for _,v:=range sortFieldsArr {
+		tmp:=strings.Split(v," ")
+		if len(tmp)!= 2 {
+			return nil,errors.New("排序字段解析错误")
+		}
+		//升降序指令，统一转小写
+		tmp[1]=strings.ToLower(tmp[1])
+		if !inArray(tmp[1],[]string{aes, desc}) {
+			return nil,errors.New(fmt.Sprintf("排序字段解析错误,排序指令只支持:%s,%s",aes,desc))
+		}
+
+		sortFieldsSlice=append(sortFieldsSlice,sortField{field:tmp[0],val:tmp[1]})
+	}
+
+	return
+
+}
+
+func inArray(item string,items []string) bool {
+	for _,v:=range items {
+		if v== item {
+			return true
+		}
+	}
+	return false
+}
+
 //slice interface 变数组
-func (this *Sort) toSlice(arr interface{}) ([]interface{}, error) {
+func toSlice(arr interface{}) ([]interface{}, error) {
 	v := reflect.ValueOf(arr)
 	if v.Kind() != reflect.Ptr {
 		return []interface{}{}, errors.New("排序源数据必须为切片指针")
@@ -109,7 +177,7 @@ func (this *Sort) toSlice(arr interface{}) ([]interface{}, error) {
 }
 
 //获取对象属性值
-func (this *Sort) getObjVal(obj interface{}, field string) interface{} {
+func  getObjVal(obj interface{}, field string) interface{} {
 	if obj == nil {
 		return ""
 	}
