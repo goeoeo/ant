@@ -8,76 +8,29 @@ import (
 	"time"
 )
 
-//数据验证器,用于验证结构体字段内容是否合法
-//目标，只要注册了方法就可以直接使用
+type (
 
-type ValidFun func(validValue interface{}, params ...string) bool
+	//数据验证器,用于验证结构体字段内容是否合法
+	Validation struct {
+		Config      *ValidationConfig
+		validateOne bool //只验证一个字段
 
-// A Validation context manages data validation and error messages.
-type Validation struct {
-	structTagField  string //结构体 验证器structTag名称
-	structFieldName string //结构体字段名称
+		requireFields  []string          //存放非零值字段
+		priorityFields []string          //优先验证字段，可通过此属性，调整字段验证顺序
+		fieldTag       map[string]string //手动设置验证规则
 
-	validateOne bool //只验证一个字段
-
-	validFuns      map[string]ValidFun
-	requireFields  []string          //存放非零值字段
-	priorityFields []string          //优先验证字段，可通过此属性，调整字段验证顺序
-	fieldTag       map[string]string //手动设置验证规则
-
-	failMessages map[string]string //字段验证失败的提示信息,当没有设置字段信息时，使用拼接的方式进行错误显示
-	messageTmpls map[string]string //验证失败函数对应的模板消息
-}
-
-//外部调用实例
-var Valid *Validation
-
-func init() {
-	Valid = NewValidation()
-}
+		failMessages map[string]string //字段验证失败的提示信息,当没有设置字段信息时，使用拼接的方式进行错误显示
+	}
+)
 
 //new
 func NewValidation() *Validation {
 	this := &Validation{
-		structTagField:  "valid",
-		structFieldName: "field",
+		Config: DefultValidationConfig,
 	}
 
-	this.validFuns = make(map[string]ValidFun)
 	this.failMessages = make(map[string]string)
 	this.fieldTag = make(map[string]string)
-
-	this.messageTmpls = MessageTmpls
-
-	//注册函数
-	this.RegisterFun("Max", Max).
-		RegisterFun("Min", Min).
-		RegisterFun("Range", Range).
-		RegisterFun("MinSize", MinSize).
-		RegisterFun("MaxSize", MaxSize).
-		RegisterFun("Length", Length).
-		RegisterFun("Alpha", Alpha).
-		RegisterFun("Numeric", Numeric).
-		RegisterFun("AlphaNumeric", AlphaNumeric).
-		RegisterFun("AlphaDash", AlphaDash).
-		RegisterFun("Email", Email).
-		RegisterFun("IP", IP).
-		RegisterFun("Mobile", Mobile).
-		RegisterFun("Tel", Tel).
-		RegisterFun("ZipCode", ZipCode).
-		RegisterFun("Mac", Mac).
-		RegisterFun("ChnDash", ChnDash).
-		RegisterFun("ChnAlphaNumeric", ChnAlphaNumeric)
-
-	return this
-
-}
-
-//设定函数对应的模板消息
-func (this *Validation) SetMessageTmpls(messageTmpls map[string]string) *Validation {
-	for k, v := range messageTmpls {
-		this.messageTmpls[k] = v
-	}
 
 	return this
 }
@@ -90,16 +43,6 @@ func (this *Validation) SetFailMessages(failMessages map[string]string) *Validat
 
 	return this
 
-}
-
-//注册函数
-func (this *Validation) RegisterFun(funcName string, validFunc ValidFun) *Validation {
-	if len(this.validFuns) == 0 {
-		this.validFuns = make(map[string]ValidFun)
-	}
-	this.validFuns[funcName] = validFunc
-
-	return this
 }
 
 //获取字段对应的错误信息
@@ -201,20 +144,20 @@ func (this *Validation) validField(field string, fieldType reflect.StructField, 
 	//零值验证
 	if this.IsEmpty(fieldValue.Interface()) {
 		if this.inArray(field, this.requireFields) {
-			return this.getError(field, fieldType.Tag.Get(this.structFieldName), this.messageTmpls["Required"])
+			return this.getError(field, fieldType.Tag.Get(this.Config.structFieldName), this.Config.messageTmpls["Required"])
 		}
 		return nil
 	}
 
 	//定义了验证函数
-	if fieldType.Tag.Get(this.structTagField) != "" {
-		funcsMap := this.parseFunc(fieldType.Tag.Get(this.structTagField))
+	if fieldType.Tag.Get(this.Config.structTagField) != "" {
+		funcsMap := this.parseFunc(fieldType.Tag.Get(this.Config.structTagField))
 		for k, v := range funcsMap {
-			if tmpFunc, ok := this.validFuns[k]; ok {
+			if tmpFunc, ok := this.Config.validFuns[k]; ok {
 				if !tmpFunc(fieldValue.Interface(), v...) {
 					//验证未通过
-					name := fieldType.Tag.Get(this.structFieldName)
-					if msg, ok := this.messageTmpls[k]; ok {
+					name := fieldType.Tag.Get(this.Config.structFieldName)
+					if msg, ok := this.Config.messageTmpls[k]; ok {
 						//设置了提示信息
 						formatParams := []interface{}{}
 						for _, v1 := range v {
