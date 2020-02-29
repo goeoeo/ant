@@ -38,7 +38,7 @@ func NewAntMux() *AntMux {
 	return this
 }
 
-//Debug
+//debug
 func (this *AntMux) Debug(debug bool) *AntMux {
 	this.debug = debug
 

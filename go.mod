@@ -1,13 +1,3 @@
 module github.com/phpdi/ant
 
-require (
-	github.com/astaxie/beego v1.11.1
-	github.com/go-sql-driver/mysql v1.4.1
-)
-
-replace (
-	golang.org/x/crypto => github.com/golang/crypto v0.0.0-20181127143415-eb0de9b17e85
-	golang.org/x/net => github.com/golang/net v0.0.0-20181114220301-adae6a3d119a
-)
-
 go 1.13

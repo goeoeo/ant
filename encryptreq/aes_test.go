@@ -1,4 +1,4 @@
-package util
+package encryptreq
 
 import (
 	"testing"

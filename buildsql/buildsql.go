@@ -3,8 +3,7 @@ package buildsql
 import (
 	"errors"
 	"fmt"
-	"github.com/phpdi/ant/reflectutil"
-	"github.com/phpdi/ant/stringutil"
+	"github.com/phpdi/ant/util"
 	"regexp"
 	"sort"
 	"strings"
@@ -322,14 +321,14 @@ func GetTableNameFromModel(model interface{}) (string, error) {
 
 	tableName := ""
 
-	objT, _, err := reflectutil.GetStructTV(model)
+	objT, _, err := util.GetStructTV(model)
 
 	if err != nil {
 		return "", err
 	}
 
 	for i := 0; i < objT.NumField(); i++ {
-		tableName = reflectutil.GetStructTagFuncContent(objT.Field(i).Tag, "orm", "table")
+		tableName = util.GetStructTagFuncContent(objT.Field(i).Tag, "orm", "table")
 		if tableName != "" {
 			break
 		}
@@ -349,7 +348,7 @@ func (this *BuildSql) setFieldStr() *BuildSql {
 	//默认全部选中
 	if len(this.selectField) != 0 {
 		for k, _ := range this.fieldMap {
-			if !stringutil.InSliceString(k, this.selectField) {
+			if !util.InSliceString(k, this.selectField) {
 				//删除没有使用的字段
 				delete(this.fieldMap, k)
 			}
@@ -494,7 +493,7 @@ func (this *BuildSql) Limit(params ...int) *BuildSql {
 //解析结构体的值成map
 func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias string) error {
 
-	objT, objV, err := reflectutil.GetStructTV(model)
+	objT, objV, err := util.GetStructTV(model)
 	if err != nil {
 		return err
 	}
@@ -503,7 +502,7 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 	for i := 0; i < objT.NumField(); i++ {
 		value := objV.Field(i).Interface()
 
-		if !stringutil.InSliceString(objT.Field(i).Name, this.emphasizeKey) && dropEmpty && reflectutil.IsEmpty(value) {
+		if !util.InSliceString(objT.Field(i).Name, this.emphasizeKey) && dropEmpty && util.IsEmpty(value) {
 			//没有在强调map里,dropEmpty=true,值为零,会被丢弃
 			continue
 		}
@@ -519,7 +518,7 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 		}
 
 		//聚合字段
-		if this.isPolymerization(field) && !stringutil.InSliceString(field, this.emphasizeKey) {
+		if this.isPolymerization(field) && !util.InSliceString(field, this.emphasizeKey) {
 			//是聚合字段,但是不是强调字段,丢弃
 			continue
 		}
