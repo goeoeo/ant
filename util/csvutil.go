@@ -1,10 +1,8 @@
-package csvutil
+package util
 
 import (
 	"bytes"
 	"encoding/csv"
-	"github.com/astaxie/beego/context"
-	"net/url"
 )
 
 type CsvUtil struct {
@@ -22,7 +20,7 @@ func NewCsvUtil(title []string, rows [][]string) *CsvUtil {
 }
 
 //csv导出工具
-func (this *CsvUtil) Export(ctx *context.Context, fileName string) {
+func (this *CsvUtil) Export() []byte {
 	b := new(bytes.Buffer)
 	wr := csv.NewWriter(b)
 
@@ -38,9 +36,6 @@ func (this *CsvUtil) Export(ctx *context.Context, fileName string) {
 
 	wr.Flush()
 
-	ctx.Output.Header("Content-Type", "text/csv")
-	ctx.Output.Header("Content-Disposition", "attachment;filename="+url.PathEscape(fileName))
-
-	ctx.Output.Body(b.Bytes())
+	return b.Bytes()
 
 }

@@ -1,4 +1,4 @@
-package stringutil
+package util
 
 import (
 	"crypto/aes"
@@ -27,12 +27,12 @@ func AESEncrypt(key []byte, text string) (string, bool) {
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
 
-	return base64.URLEncoding.EncodeToString(ciphertext), true
+	return base64.StdEncoding.EncodeToString(ciphertext), true
 }
 
 // Decrypt from base64 to decrypted string
 func AESDecrypt(key []byte, cryptoText string) (string, bool) {
-	ciphertext, _ := base64.URLEncoding.DecodeString(cryptoText)
+	ciphertext, _ := base64.StdEncoding.DecodeString(cryptoText)
 
 	block, err := aes.NewCipher(key)
 	if err != nil {

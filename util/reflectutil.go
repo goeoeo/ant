@@ -1,7 +1,6 @@
-package reflectutil
+package util
 
 import (
-	"github.com/phpdi/ant/stringutil"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -11,21 +10,20 @@ import (
 
 //判定一个interface的值是否为空值
 func IsEmpty(obj interface{}) bool {
-	if obj == nil {
-		return true
-	}
 
-	switch val:=obj.(type) {
+	switch val := obj.(type) {
+	case nil:
+		return true
 	case string:
 		return len(strings.TrimSpace(val)) == 0
 	case bool:
 		return true
-	case int,int8,int16,int32,int64,uint,uint8,uint16,uint32,uint64:
-		return val==0
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return fmt.Sprintf("%d", val) == "0"
 	case float32:
-		return val==float32(0)
+		return val == float32(0)
 	case float64:
-		return val==float64(0)
+		return val == float64(0)
 	case time.Time:
 		return val.IsZero()
 	}
@@ -48,7 +46,7 @@ func IsStructPtr(t reflect.Type) bool {
 }
 
 //获取结构体或者指针的类型和值
-func GetStructTV(obj interface{})(reflect.Type,reflect.Value,error) {
+func GetStructTV(obj interface{}) (reflect.Type, reflect.Value, error) {
 	objT := reflect.TypeOf(obj)
 	objV := reflect.ValueOf(obj)
 
@@ -58,17 +56,17 @@ func GetStructTV(obj interface{})(reflect.Type,reflect.Value,error) {
 		objT = objT.Elem()
 		objV = objV.Elem()
 	default:
-		return objT,objV, fmt.Errorf("%v must be a struct or a struct pointer", obj)
+		return objT, objV, fmt.Errorf("%v must be a struct or a struct pointer", obj)
 	}
 
-	return objT,objV,nil
+	return objT, objV, nil
 }
 
 //获取获取结构体中structTag中函数参数内容
-func GetStructTagFuncContent(structTag reflect.StructTag,field string,funcName string) string {
-	tag:=structTag.Get(field)
+func GetStructTagFuncContent(structTag reflect.StructTag, field string, funcName string) string {
+	tag := structTag.Get(field)
 
-	re := regexp.MustCompile(fmt.Sprintf(`%s\(([^(]*)\)`,funcName))
+	re := regexp.MustCompile(fmt.Sprintf(`%s\(([^(]*)\)`, funcName))
 
 	res := re.FindStringSubmatch(tag)
 
@@ -84,7 +82,7 @@ func GetNotEmptyFields(obj interface{}, fields ...string) []string {
 	objT := reflect.TypeOf(obj)
 	objV := reflect.ValueOf(obj)
 
-	objT,objV,err:=GetStructTV(obj)
+	objT, objV, err := GetStructTV(obj)
 	if err != nil {
 		return fields
 	}
@@ -103,7 +101,7 @@ func GetNotEmptyFields(obj interface{}, fields ...string) []string {
 			}
 		}
 
-		if !IsEmpty(currentFieldValue) && !stringutil.InSliceString(currentField, fields) {
+		if !IsEmpty(currentFieldValue) && !InArray(currentField, fields) {
 			fields = append(fields, currentField)
 		}
 
@@ -126,23 +124,23 @@ func ToSlice(arr interface{}) []interface{} {
 }
 
 //强大的join
-func Join(arr interface{},sep string) string{
-	res:=ToSlice(arr)
+func Join(arr interface{}, sep string) string {
+	res := ToSlice(arr)
 
-	str:=""
-	for _,v:=range res {
-		if tmpStr,ok:=v.(string);ok{
-			str+=tmpStr+sep
+	str := ""
+	for _, v := range res {
+		if tmpStr, ok := v.(string); ok {
+			str += tmpStr + sep
 		}
 	}
 
-	return strings.TrimRight(str,sep)
+	return strings.TrimRight(str, sep)
 }
 
-func InArray(item interface{},arr interface{}) bool {
-	arrSlice:=ToSlice(arr)
-	
-	for _,v:=range arrSlice {
+func InArray(item interface{}, arr interface{}) bool {
+	arrSlice := ToSlice(arr)
+
+	for _, v := range arrSlice {
 		if reflect.DeepEqual(item, v) {
 			return true
 		}

@@ -1,4 +1,4 @@
-package reflectutil
+package util
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 )
 
 func TestIsEmpty(t *testing.T) {
-	a:= ""
+	a := ""
 	fmt.Println(IsEmpty(a))
 }
 
 func TestInArray(t *testing.T) {
-	a:="1111"
-	b:=[]string{"111","222"}
-	fmt.Println(InArray(a,b))
+	a := "1111"
+	b := []string{"111", "222"}
+	fmt.Println(InArray(a, b))
 }

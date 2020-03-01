@@ -10,50 +10,36 @@ import (
 	"time"
 )
 
-
-
 type sortField struct {
 	field string //排序字段
 	val   string //aes=升序，desc=降序
 }
 
 const (
-	aes="aes"
-	desc="desc"
+	aes  = "aes"
+	desc = "desc"
 )
 
 //多字段排序
 //SliceSort([]User ,"Name desc,Id aes"})
-func SortSlice(slicePtr interface{}, sortFields string/* Field Aes */) error {
+func SortSlice(slicePtr interface{}, sortFields string /* Field Aes */) error {
 
 	var (
-		err error
+		err            error
 		sortFieldSlice []sortField
-		arrSlice []interface{}
-		content []byte
+		arrSlice       []interface{}
+		content        []byte
 	)
 
-	if sortFieldSlice,err=parseField(sortFields);err!= nil {
+	if sortFieldSlice, err = parseField(sortFields); err != nil {
 		return err
 	}
 
 	//没有排序字段
-	if len(sortFieldSlice)== 0 {
+	if len(sortFieldSlice) == 0 {
 		return nil
 	}
-	//
-	//aHdr := (*reflect.SliceHeader)(slicePtr)
-	//cHdr := (*reflect.SliceHeader)(unsafe.Pointer(&arrSlice))
-	//*cHdr=*aHdr
-	//
-	//*(*reflect.SliceHeader)(unsafe.Pointer(&slicePtr))=*(*reflect.SliceHeader)(unsafe.Pointer(&arrSlice))
-	//
-	//arrSlice=*(*[]interface{})(unsafe.Pointer(&slicePtr))
 
-	//fmt.Printf("===>%v\n",slicePtr)
-	//
-	//fmt.Printf("===>%v\n",len(arrSlice))
-	//return nil
 	if arrSlice, err = toSlice(slicePtr); err != nil {
 		return err
 	}
@@ -61,12 +47,12 @@ func SortSlice(slicePtr interface{}, sortFields string/* Field Aes */) error {
 	//执行排序
 	sort.Slice(arrSlice, func(i, j int) bool {
 
-		for _,v:=range sortFieldSlice {
-			a := getObjVal(arrSlice[i],v.field)
-			b := getObjVal(arrSlice[j],v.field)
+		for _, v := range sortFieldSlice {
+			a := getObjVal(arrSlice[i], v.field)
+			b := getObjVal(arrSlice[j], v.field)
 
 			//当前排序字段值相等跳过
-			if reflect.DeepEqual(a,b) {
+			if reflect.DeepEqual(a, b) {
 				continue
 			}
 
@@ -110,46 +96,45 @@ func SortSlice(slicePtr interface{}, sortFields string/* Field Aes */) error {
 
 	})
 
-
 	//将排序内容转回去
-	if content,err=json.Marshal(arrSlice);err!= nil {
+	if content, err = json.Marshal(arrSlice); err != nil {
 		return err
 	}
 
 	//slicePtr=unsafe.Pointer(&arrSlice)
 
-	return json.Unmarshal(content,slicePtr)
+	return json.Unmarshal(content, slicePtr)
 
 }
 
 //解析排序字段
-func parseField(sortFields string) (sortFieldsSlice []sortField,err error) {
+func parseField(sortFields string) (sortFieldsSlice []sortField, err error) {
 	var (
 		sortFieldsArr []string
 	)
-	sortFieldsArr=strings.Split(sortFields,",")
+	sortFieldsArr = strings.Split(sortFields, ",")
 
-	for _,v:=range sortFieldsArr {
-		tmp:=strings.Split(v," ")
-		if len(tmp)!= 2 {
-			return nil,errors.New("排序字段解析错误")
+	for _, v := range sortFieldsArr {
+		tmp := strings.Split(v, " ")
+		if len(tmp) != 2 {
+			return nil, errors.New("排序字段解析错误")
 		}
 		//升降序指令，统一转小写
-		tmp[1]=strings.ToLower(tmp[1])
-		if !inArray(tmp[1],[]string{aes, desc}) {
-			return nil,errors.New(fmt.Sprintf("排序字段解析错误,排序指令只支持:%s,%s",aes,desc))
+		tmp[1] = strings.ToLower(tmp[1])
+		if !inArray(tmp[1], []string{aes, desc}) {
+			return nil, errors.New(fmt.Sprintf("排序字段解析错误,排序指令只支持:%s,%s", aes, desc))
 		}
 
-		sortFieldsSlice=append(sortFieldsSlice,sortField{field:tmp[0],val:tmp[1]})
+		sortFieldsSlice = append(sortFieldsSlice, sortField{field: tmp[0], val: tmp[1]})
 	}
 
 	return
 
 }
 
-func inArray(item string,items []string) bool {
-	for _,v:=range items {
-		if v== item {
+func inArray(item string, items []string) bool {
+	for _, v := range items {
+		if v == item {
 			return true
 		}
 	}
@@ -177,7 +162,7 @@ func toSlice(arr interface{}) ([]interface{}, error) {
 }
 
 //获取对象属性值
-func  getObjVal(obj interface{}, field string) interface{} {
+func getObjVal(obj interface{}, field string) interface{} {
 	if obj == nil {
 		return ""
 	}

@@ -1,4 +1,4 @@
-package stringutil
+package util
 
 import (
 	"crypto/md5"
@@ -72,7 +72,6 @@ func RandomString(num int) string {
 	}
 	return string(b)
 }
-
 
 //保留左边0的字符串加法
 //001+1=002

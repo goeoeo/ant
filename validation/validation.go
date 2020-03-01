@@ -29,6 +29,13 @@ type Validation struct {
 	messageTmpls map[string]string //验证失败函数对应的模板消息
 }
 
+//外部调用实例
+var Valid *Validation
+
+func init() {
+	Valid = NewValidation()
+}
+
 //new
 func NewValidation() *Validation {
 	this := &Validation{
@@ -151,7 +158,7 @@ func (this *Validation) ValidAll(obj interface{}) map[string]error {
 	//设置验证结构体
 	for i := 0; i < objT.NumField(); i++ {
 		field := objT.Field(i).Name
-		if this.InSliceString(field, this.priorityFields) {
+		if this.inArray(field, this.priorityFields) {
 			continue
 		}
 		this.priorityFields = append(this.priorityFields, field)
@@ -193,7 +200,7 @@ func (this *Validation) validField(field string, fieldType reflect.StructField, 
 
 	//零值验证
 	if this.IsEmpty(fieldValue.Interface()) {
-		if this.InSliceString(field, this.requireFields) {
+		if this.inArray(field, this.requireFields) {
 			return this.getError(field, fieldType.Tag.Get(this.structFieldName), this.messageTmpls["Required"])
 		}
 		return nil
@@ -299,7 +306,7 @@ func (this *Validation) IsEmpty(obj interface{}) bool {
 	case bool:
 		return true
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		return val == 0
+		return fmt.Sprintf("%d", val) == "0"
 	case float32:
 		return val == float32(0)
 	case float64:
@@ -316,7 +323,7 @@ func (this *Validation) IsEmpty(obj interface{}) bool {
 }
 
 //判定某个值是否在数组里面
-func (this *Validation) InSliceString(field string, arr []string) bool {
+func (this *Validation) inArray(field string, arr []string) bool {
 	for _, v := range arr {
 		if v == field {
 			return true

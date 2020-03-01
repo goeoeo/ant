@@ -1,10 +1,10 @@
 package buildsql
 
 import (
-	"ant/reflectutil"
-	"ant/stringutil"
 	"errors"
 	"fmt"
+	"github.com/phpdi/ant/reflectutil"
+	"github.com/phpdi/ant/stringutil"
 	"regexp"
 	"sort"
 	"strings"
@@ -51,8 +51,8 @@ func NewModel(model interface{}, params ...string) *BuildSql {
 
 	if len(params) == 1 {
 		buildSql.tableAlias = params[0]
-	}else{
-		buildSql.tableAlias,_=GetTableNameFromModel(model)
+	} else {
+		buildSql.tableAlias, _ = GetTableNameFromModel(model)
 	}
 
 	buildSql.fieldMap = make(map[string]interface{})
@@ -63,9 +63,8 @@ func NewModel(model interface{}, params ...string) *BuildSql {
 	return buildSql
 }
 
-
 //基本插入
-func (this *BuildSql)baseInsert(insert string) (string, error) {
+func (this *BuildSql) baseInsert(insert string) (string, error) {
 	var err error
 
 	//检查错误
@@ -74,7 +73,7 @@ func (this *BuildSql)baseInsert(insert string) (string, error) {
 	}
 
 	//获取主表名称
-	this.table, err =GetTableNameFromModel(this.primaryModel)
+	this.table, err = GetTableNameFromModel(this.primaryModel)
 	if err != nil {
 		return "", err
 	}
@@ -85,8 +84,8 @@ func (this *BuildSql)baseInsert(insert string) (string, error) {
 	}
 
 	//字段解析
-	if len(this.fieldMap)== 0 {
-		return "",errors.New("字段缺失")
+	if len(this.fieldMap) == 0 {
+		return "", errors.New("字段缺失")
 	}
 
 	column := ""
@@ -103,8 +102,7 @@ func (this *BuildSql)baseInsert(insert string) (string, error) {
 	column = strings.Trim(column, ",")
 	value = strings.Trim(value, ",")
 
-
-	return fmt.Sprintf("%s INTO %s (%s) VALUES (%s);",insert, this.table, column, value), nil
+	return fmt.Sprintf("%s INTO %s (%s) VALUES (%s);", insert, this.table, column, value), nil
 
 }
 
@@ -133,10 +131,9 @@ func (this *BuildSql) Update() (string, error) {
 		return "", err
 	}
 	//字段解析
-	if len(this.fieldMap)== 0 {
-		return "",errors.New("字段缺失")
+	if len(this.fieldMap) == 0 {
+		return "", errors.New("字段缺失")
 	}
-
 
 	setStr := ""
 	for k, v := range this.fieldMap {
@@ -152,8 +149,8 @@ func (this *BuildSql) Update() (string, error) {
 
 	setStr = strings.Trim(setStr, ",")
 
-	if this.whereStr== "" {
-		return "",errors.New("where 条件缺失")
+	if this.whereStr == "" {
+		return "", errors.New("where 条件缺失")
 	}
 
 	return fmt.Sprintf("UPDATE %s SET %s%s;", this.table, setStr, this.whereStr), nil
@@ -323,17 +320,17 @@ func (this *BuildSql) OrderBy(fields string) *BuildSql {
 //从model 中获取表名称
 func GetTableNameFromModel(model interface{}) (string, error) {
 
-	tableName:=""
+	tableName := ""
 
-	objT,_,err := reflectutil.GetStructTV(model)
+	objT, _, err := reflectutil.GetStructTV(model)
 
 	if err != nil {
-		return "",err
+		return "", err
 	}
 
 	for i := 0; i < objT.NumField(); i++ {
-		tableName =reflectutil.GetStructTagFuncContent(objT.Field(i).Tag,"orm","table")
-		if tableName!= "" {
+		tableName = reflectutil.GetStructTagFuncContent(objT.Field(i).Tag, "orm", "table")
+		if tableName != "" {
 			break
 		}
 	}
@@ -430,8 +427,8 @@ func (this *BuildSql) Select() (string, error) {
 	}
 
 	//没有进行连表操作
-	if this.joinStr== "" {
-		this.tableAlias=""
+	if this.joinStr == "" {
+		this.tableAlias = ""
 	}
 
 	//解析模型字段
@@ -443,8 +440,8 @@ func (this *BuildSql) Select() (string, error) {
 	//生成查询字段
 	this.setFieldStr()
 
-	if this.fieldStr== "" {
-		return "",errors.New("未解析出查询字段")
+	if this.fieldStr == "" {
+		return "", errors.New("未解析出查询字段")
 	}
 
 	sql := fmt.Sprintf("SELECT %s FROM %s %s%s%s%s%s%s;",
@@ -497,11 +494,10 @@ func (this *BuildSql) Limit(params ...int) *BuildSql {
 //解析结构体的值成map
 func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias string) error {
 
-	objT,objV,err := reflectutil.GetStructTV(model)
+	objT, objV, err := reflectutil.GetStructTV(model)
 	if err != nil {
 		return err
 	}
-
 
 	//遍历解析出NewFieldsMap
 	for i := 0; i < objT.NumField(); i++ {
@@ -512,9 +508,8 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 			continue
 		}
 
-
 		ormTag := objT.Field(i).Tag.Get("orm")
-		field := GetColumnName(ormTag,"column")
+		field := GetColumnName(ormTag, "column")
 		if field == "" {
 			continue
 		}
@@ -538,9 +533,9 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 }
 
 //获取字段的名称
-func GetColumnName(str string,funcName string) string {
+func GetColumnName(str string, funcName string) string {
 
-	re := regexp.MustCompile(fmt.Sprintf(`%s\(([^(]*)\)`,funcName))
+	re := regexp.MustCompile(fmt.Sprintf(`%s\(([^(]*)\)`, funcName))
 
 	res := re.FindStringSubmatch(str)
 
@@ -551,7 +546,6 @@ func GetColumnName(str string,funcName string) string {
 	return ""
 }
 
-
 //判定是否为聚合字段
 func (this *BuildSql) isPolymerization(field string) bool {
 
@@ -560,4 +554,3 @@ func (this *BuildSql) isPolymerization(field string) bool {
 	return re.Match([]byte(field))
 
 }
-
