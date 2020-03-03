@@ -35,11 +35,11 @@ func TestValidation_parseFunc(t *testing.T) {
 
 func TestNewValidation(t *testing.T) {
 	v := NewValidation()
-	v.SetMessageTmpls(map[string]string{
+	v.Config.SetMessageTmpls(map[string]string{
 		"Max": "max is %v",
 	})
 
-	t.Log(v.messageTmpls["Max"])
+	t.Log(v.Config.messageTmpls["Max"])
 }
 
 func TestValidation_SetFailMessages(t *testing.T) {
