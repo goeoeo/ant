@@ -50,3 +50,12 @@ func TestValidation_SetFailMessages(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestValidation_Require2(t *testing.T) {
+	a := ant.StockHsas{Id: 100}
+	v := NewValidation().Require("Code")
+	err := v.Valid(a)
+	if err != nil {
+		t.Error(err)
+	}
+}

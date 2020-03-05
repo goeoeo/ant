@@ -54,6 +54,10 @@ func (this *Validation) getError(field string, name string, msg string) error {
 	}
 
 	//使用拼接的方式提示错误
+	if name == "" {
+		name = field
+	}
+
 	return errors.New(name + msg)
 }
 
