@@ -12,7 +12,7 @@ func init() {
 		RegisterFun("Chn", Chn, "只支持汉字")
 }
 
-func NewValidation() *Validation {
+func NewValidate() *Validation {
 	return New()
 }
 
