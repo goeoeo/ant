@@ -1,6 +1,8 @@
 package validation
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -109,6 +111,12 @@ func (this *ValidationConfig) SetMessageTmpls(messageTmpls map[string]string) *V
 	}
 
 	return this
+}
+
+//打印出所有支持的函数
+func (this *ValidationConfig) SupportFuns() {
+	tmp, _ := json.MarshalIndent(this.messageTmpls, "", "     ")
+	fmt.Println(string(tmp))
 }
 
 /*下面是验证函数，每个验证函数都需要注册*/

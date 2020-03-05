@@ -24,7 +24,7 @@ type (
 )
 
 //new
-func NewValidation() *Validation {
+func New() *Validation {
 	this := &Validation{
 		Config: DefultValidationConfig,
 	}

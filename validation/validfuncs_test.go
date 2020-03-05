@@ -8,7 +8,7 @@ import (
 func TestMax(t *testing.T) {
 
 	a := ant.StockHsas{}
-	v := NewValidation()
+	v := New()
 
 	//零值不验证
 	err := v.Valid(a)

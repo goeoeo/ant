@@ -9,7 +9,7 @@ import (
 func TestValidation_Require(t *testing.T) {
 	a := ant.StockHsas{}
 
-	v := NewValidation()
+	v := New()
 
 	//零值,必填,验证
 	err := v.Require("Code").Valid(a)
@@ -29,12 +29,12 @@ func TestValidation_Require(t *testing.T) {
 }
 
 func TestValidation_parseFunc(t *testing.T) {
-	res := NewValidation().parseFunc("Name(Id);Max(20);Min(5)")
+	res := New().parseFunc("Name(Id);Max(20);Min(5)")
 	fmt.Printf("%+v", res)
 }
 
 func TestNewValidation(t *testing.T) {
-	v := NewValidation()
+	v := New()
 	v.Config.SetMessageTmpls(map[string]string{
 		"Max": "max is %v",
 	})
@@ -44,7 +44,7 @@ func TestNewValidation(t *testing.T) {
 
 func TestValidation_SetFailMessages(t *testing.T) {
 	a := ant.StockHsas{Id: 100}
-	v := NewValidation().SetFailMessages(map[string]string{"Id": "Id 必须到5到20之间"})
+	v := New().SetFailMessages(map[string]string{"Id": "Id 必须到5到20之间"})
 	err := v.Valid(a)
 	if err != nil {
 		t.Error(err)
@@ -53,7 +53,7 @@ func TestValidation_SetFailMessages(t *testing.T) {
 
 func TestValidation_Require2(t *testing.T) {
 	a := ant.StockHsas{Id: 100}
-	v := NewValidation().Require("Code")
+	v := New().Require("Code")
 	err := v.Valid(a)
 	if err != nil {
 		t.Error(err)
