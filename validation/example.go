@@ -5,12 +5,15 @@ import (
 )
 
 //定义示例
-
 func init() {
 	//注册函数
 	DefultValidationConfig.
 		RegisterFun("OpenTaskName", OpenTaskName, "只支持数字,字母,汉字,-或_或.的组合").
 		RegisterFun("Chn", Chn, "只支持汉字")
+}
+
+func NewValidation() *Validation {
+	return New()
 }
 
 //中文,数字,字母,下划线,点
