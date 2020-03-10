@@ -31,6 +31,7 @@ var (
 	DefultValidationConfig *ValidationConfig
 
 	MessageTmpls = map[string]string{
+		"Required":        "不能为空",
 		"Max":             "最大为%v",
 		"Min":             "最小为%v",
 		"Range":           "范围为%v到%v",
