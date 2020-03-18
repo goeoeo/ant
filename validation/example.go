@@ -7,6 +7,8 @@ import (
 //定义示例
 func init() {
 	//注册函数
+	DefultValidationConfig = NewValidationConfig()
+
 	DefultValidationConfig.
 		RegisterFun("OpenTaskName", OpenTaskName, "只支持数字,字母,汉字,-或_或.的组合").
 		RegisterFun("Chn", Chn, "只支持汉字")
