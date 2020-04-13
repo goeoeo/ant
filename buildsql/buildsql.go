@@ -9,47 +9,49 @@ import (
 	"strings"
 )
 
-type Closure = func(this *BuildSql) //用于构建where条件的闭包函数
+const (
+	OrmTag    = "orm"
+	TableTag  = "table"
+	ColumnTag = "column"
+)
 
-//构建sql对象
-//默认情况下零值不会参与sql的构建，若需要则使用Emphasize函数对其进行强调
-type BuildSql struct {
-	table        string      //表名
-	tableAlias   string      //主表别名
-	whereStr     string      //where条件字串
-	closureRun   bool        //标识闭包函数正在被调用
-	limit        string      //数据条数限制
-	joinStr      string      //连表字串
-	fieldStr     string      //查询字段
-	groupBy      string      //分组字串
-	orderBy      string      //排序字串
-	primaryModel interface{} //主表模型
+type (
 
-	//以下属性用于解析响应数据为对应的结构体
-	modelFieldMap   map[string][2]string   //结构体的字段与模型名称和数据库字段对应的映射关系,用于http查询反解析,[2]string中0=model的名称,1=model的字段
-	fieldMap        map[string]interface{} //数据库字段和值的映射关系
-	fieldMapSortKey []string               //存放排过序的fieldMap的key
-	emphasizeKey    []string               //强调字段,如果model的字段在这里面,那么构建sql的时候零值将不会被丢弃
-	selectField     []string               //Select 查询，指定需要查询的字段，默认全部查询
+	//用于构建where条件的闭包函数
+	Closure = func(this *BuildSql)
 
-	errors []error //构建sql中产生的错误
-	Debug  bool    //是否开启调试，开启后会打印出构建的sql语句
-}
+	//构建sql对象
+	//默认情况下零值不会参与sql的构建，若需要则使用Emphasize函数对其进行强调
+	BuildSql struct {
+		table        string      //表名
+		tableAlias   string      //主表别名
+		whereStr     string      //where条件字串
+		closureRun   bool        //标识闭包函数正在被调用
+		limit        string      //数据条数限制
+		joinStr      string      //连表字串
+		fieldStr     string      //查询字段
+		groupBy      string      //分组字串
+		orderBy      string      //排序字串
+		primaryModel interface{} //主表模型
 
-//分页对象
-type Pagination struct {
-	Total    int    //总页数k
-	Page     int    //当前页 url中为page参数
-	PageSize int    //分页数量 url 中为per 参数
-	Link     string //生成的a标签
-}
+		//以下属性用于解析响应数据为对应的结构体
+		modelFieldMap   map[string][2]string   //结构体的字段与模型名称和数据库字段对应的映射关系,用于http查询反解析,[2]string中0=model的名称,1=model的字段
+		fieldMap        map[string]interface{} //数据库字段和值的映射关系
+		fieldMapSortKey []string               //存放排过序的fieldMap的key
+		emphasizeKey    []string               //强调字段,如果model的字段在这里面,那么构建sql的时候零值将不会被丢弃
+		selectField     []string               //Select 查询，指定需要查询的字段，默认全部查询
+
+		errors []error //构建sql中产生的错误
+		Debug  bool    //是否开启调试，开启后会打印出构建的sql语句
+	}
+)
 
 //构造函数
-func NewModel(model interface{}, params ...string) *BuildSql {
+func NewModel(model interface{}, tableAlias ...string) *BuildSql {
 	buildSql := &BuildSql{}
 
-	if len(params) == 1 {
-		buildSql.tableAlias = params[0]
+	if len(tableAlias) == 1 {
+		buildSql.tableAlias = tableAlias[0]
 	} else {
 		buildSql.tableAlias, _ = GetTableNameFromModel(model)
 	}
@@ -317,9 +319,7 @@ func (this *BuildSql) OrderBy(fields string) *BuildSql {
 }
 
 //从model 中获取表名称
-func GetTableNameFromModel(model interface{}) (string, error) {
-
-	tableName := ""
+func GetTableNameFromModel(model interface{}) (tableName string, err error) {
 
 	objT, _, err := util.GetStructTV(model)
 
@@ -328,13 +328,15 @@ func GetTableNameFromModel(model interface{}) (string, error) {
 	}
 
 	for i := 0; i < objT.NumField(); i++ {
-		tableName = util.GetStructTagFuncContent(objT.Field(i).Tag, "orm", "table")
-		if tableName != "" {
-			break
+		if tableName = util.GetStructTagFuncContent(objT.Field(i).Tag, OrmTag, TableTag); tableName != "" {
+			return
 		}
 	}
 
-	return tableName, nil
+	//未定义tableName
+	tableName = snakeString(objT.Name())
+
+	return
 }
 
 //设置选中的字段,并生成查询字段
@@ -507,10 +509,16 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 			continue
 		}
 
-		ormTag := objT.Field(i).Tag.Get("orm")
-		field := GetColumnName(ormTag, "column")
-		if field == "" {
+		ormTag := objT.Field(i).Tag.Get(OrmTag)
+		//非orm字段
+		if ormTag == "-" {
 			continue
+		}
+
+		field := GetColumnName(ormTag, ColumnTag)
+		//未定义column
+		if field == "" {
+			field = snakeString(objT.Field(i).Name)
 		}
 
 		if alias != "" {
@@ -552,4 +560,22 @@ func (this *BuildSql) isPolymerization(field string) bool {
 
 	return re.Match([]byte(field))
 
+}
+
+// snake string, XxYy to xx_yy
+func snakeString(s string) string {
+	data := make([]byte, 0, len(s)*2)
+	j := false
+	num := len(s)
+	for i := 0; i < num; i++ {
+		d := s[i]
+		if i > 0 && d >= 'A' && d <= 'Z' && j {
+			data = append(data, '_')
+		}
+		if d != '_' {
+			j = true
+		}
+		data = append(data, d)
+	}
+	return strings.ToLower(string(data[:]))
 }

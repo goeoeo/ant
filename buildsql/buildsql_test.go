@@ -8,7 +8,7 @@ import (
 
 //插入
 func TestBuildSql_Insert(t *testing.T) {
-	sql, err := NewModel(ant.StockHsas{Code: "131"}).Insert()
+	sql, err := NewModel(ant.StockHsas{Code: "131", OpenToday: 111}).Insert()
 	if err != nil {
 		t.Error(err)
 	}
@@ -44,7 +44,7 @@ func TestBuildSql_Select(t *testing.T) {
 
 func TestBuildSql_LeftJoin(t *testing.T) {
 
-	sql, err := NewModel(ant.StockHsas{}, "T").
+	sql, err := NewModel(ant.StockHsas{}, "A").
 		LeftJoin(ant.StockHsas{}, "B", "A.code=B.code").
 		Where("A.id", 1).
 		Select()
