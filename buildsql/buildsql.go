@@ -3,10 +3,11 @@ package buildsql
 import (
 	"errors"
 	"fmt"
-	"github.com/phpdi/ant/util"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 const (
@@ -321,14 +322,14 @@ func (this *BuildSql) OrderBy(fields string) *BuildSql {
 //从model 中获取表名称
 func GetTableNameFromModel(model interface{}) (tableName string, err error) {
 
-	objT, _, err := util.GetStructTV(model)
+	objT, _, err := getStructTV(model)
 
 	if err != nil {
 		return "", err
 	}
 
 	for i := 0; i < objT.NumField(); i++ {
-		if tableName = util.GetStructTagFuncContent(objT.Field(i).Tag, OrmTag, TableTag); tableName != "" {
+		if tableName = getStructTagFuncContent(objT.Field(i).Tag, OrmTag, TableTag); tableName != "" {
 			return
 		}
 	}
@@ -350,7 +351,7 @@ func (this *BuildSql) setFieldStr() *BuildSql {
 	//默认全部选中
 	if len(this.selectField) != 0 {
 		for k, _ := range this.fieldMap {
-			if !util.InSliceString(k, this.selectField) {
+			if !inSliceString(k, this.selectField) {
 				//删除没有使用的字段
 				delete(this.fieldMap, k)
 			}
@@ -495,7 +496,7 @@ func (this *BuildSql) Limit(params ...int) *BuildSql {
 //解析结构体的值成map
 func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias string) error {
 
-	objT, objV, err := util.GetStructTV(model)
+	objT, objV, err := getStructTV(model)
 	if err != nil {
 		return err
 	}
@@ -504,7 +505,7 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 	for i := 0; i < objT.NumField(); i++ {
 		value := objV.Field(i).Interface()
 
-		if !util.InSliceString(objT.Field(i).Name, this.emphasizeKey) && dropEmpty && util.IsEmpty(value) {
+		if !inSliceString(objT.Field(i).Name, this.emphasizeKey) && dropEmpty && isEmpty(value) {
 			//没有在强调map里,dropEmpty=true,值为零,会被丢弃
 			continue
 		}
@@ -515,7 +516,7 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 			continue
 		}
 
-		field := GetColumnName(ormTag, ColumnTag)
+		field := getColumnName(ormTag, ColumnTag)
 		//未定义column
 		if field == "" {
 			field = snakeString(objT.Field(i).Name)
@@ -526,7 +527,7 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 		}
 
 		//聚合字段
-		if this.isPolymerization(field) && !util.InSliceString(field, this.emphasizeKey) {
+		if this.isPolymerization(field) && !inSliceString(field, this.emphasizeKey) {
 			//是聚合字段,但是不是强调字段,丢弃
 			continue
 		}
@@ -540,7 +541,7 @@ func (this *BuildSql) setFieldMap(model interface{}, dropEmpty bool, alias strin
 }
 
 //获取字段的名称
-func GetColumnName(str string, funcName string) string {
+func getColumnName(str string, funcName string) string {
 
 	re := regexp.MustCompile(fmt.Sprintf(`%s\(([^(]*)\)`, funcName))
 
@@ -578,4 +579,83 @@ func snakeString(s string) string {
 		data = append(data, d)
 	}
 	return strings.ToLower(string(data[:]))
+}
+
+//获取结构体或者指针的类型和值
+func getStructTV(obj interface{}) (reflect.Type, reflect.Value, error) {
+	objT := reflect.TypeOf(obj)
+	objV := reflect.ValueOf(obj)
+
+	switch {
+	case isStruct(objT):
+	case isStructPtr(objT):
+		objT = objT.Elem()
+		objV = objV.Elem()
+	default:
+		return objT, objV, fmt.Errorf("%v must be a struct or a struct pointer", obj)
+	}
+
+	return objT, objV, nil
+}
+
+//判定是否为结构体
+func isStruct(t reflect.Type) bool {
+	return t.Kind() == reflect.Struct
+}
+
+//判定是否为结构体指针
+func isStructPtr(t reflect.Type) bool {
+	return t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct
+}
+
+//获取获取结构体中structTag中函数参数内容
+func getStructTagFuncContent(structTag reflect.StructTag, field string, funcName string) string {
+	tag := structTag.Get(field)
+
+	re := regexp.MustCompile(fmt.Sprintf(`%s\(([^(]*)\)`, funcName))
+
+	res := re.FindStringSubmatch(tag)
+
+	if len(res) > 0 {
+		return res[1]
+	}
+
+	return ""
+}
+
+func inSliceString(field string, arr []string) bool {
+	for _, v := range arr {
+		if v == field {
+			return true
+		}
+	}
+
+	return false
+}
+
+//判定一个interface的值是否为空值
+func isEmpty(obj interface{}) bool {
+
+	switch val := obj.(type) {
+	case nil:
+		return true
+	case string:
+		return len(strings.TrimSpace(val)) == 0
+	case bool:
+		return true
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return fmt.Sprintf("%d", val) == "0"
+	case float32:
+		return val == float32(0)
+	case float64:
+		return val == float64(0)
+	case time.Time:
+		return val.IsZero()
+	}
+
+	v := reflect.ValueOf(obj)
+	if v.Kind() == reflect.Slice {
+		return v.Len() == 0
+	}
+	return false
 }

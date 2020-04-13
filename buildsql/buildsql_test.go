@@ -76,7 +76,7 @@ func TestBuildSql_Field(t *testing.T) {
 //}
 
 func TestGetColumnName(t *testing.T) {
-	str := GetColumnName("column(id);table(rms_hsas)", "table")
+	str := getColumnName("column(id);table(rms_hsas)", "table")
 
 	fmt.Println(str)
 }
