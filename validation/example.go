@@ -1,5 +1,6 @@
 package validation
 
+/**
 import (
 	"regexp"
 )
@@ -38,3 +39,5 @@ func Chn(validValue interface{}, params ...string) bool {
 
 	return false
 }
+
+**/
