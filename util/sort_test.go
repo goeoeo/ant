@@ -1,4 +1,4 @@
-package page
+package util
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func Test_SortSlice(t *testing.T)  {
 	}
 
 	fmt.Println("__________________________")
-	if err:=SortSlice(&clients,"Admin desc,Ip desc,Machine aes");err!=nil {
+	if err:= SortSlice(&clients,"Admin desc,Ip desc,Machine aes");err!=nil {
 		t.Error(err)
 	}
 

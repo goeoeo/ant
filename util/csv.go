@@ -3,6 +3,9 @@ package util
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
+	"fmt"
+	"reflect"
 )
 
 type CsvUtil struct {
@@ -35,4 +38,39 @@ func (this *CsvUtil) Bytes() []byte {
 
 	this.Wr.Flush()
 	return this.buff.Bytes()
+}
+
+//从slice中选中字段进行导出
+func (this *CsvUtil)Slice2Csv(arr interface{},fields ...string) (content []byte,err error){
+
+	arrT:=reflect.TypeOf(arr)
+	if arrT.Kind()!=reflect.Slice {
+		return content,errors.New("arr必须为slice")
+	}
+
+	if len(fields) == 0 {
+		return
+	}
+
+	arrV:=reflect.ValueOf(arr)
+
+	for i:=0;i<arrV.Len();i++ {
+		item:=arrV.Index(i)
+		//指针转换
+		if item.Kind() == reflect.Ptr {
+			item=item.Elem()
+		}
+
+		row:=[]string{}
+		for _,field:=range fields {
+			row=append(row,fmt.Sprintf("%v",item.FieldByName(field).Interface()))
+		}
+
+		if err=this.Row(row...);err!= nil {
+			return
+		}
+	}
+
+	content=this.Bytes()
+	return
 }
