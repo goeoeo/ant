@@ -3,25 +3,26 @@ package autodoc
 import (
 	"fmt"
 	"reflect"
+	"runtime"
 	"sort"
 	"strings"
 )
 
 const (
 	template = `
-####%s
+#### %s
 
 请求地址：%s
 
 请求方式：%s
 
-####请求参数
+#### 请求参数
 | 参数   | 类型  | 必填 | 说明 |
 | :---:   | :---: | :---: | :---: |
 %s
 #### 类型备注
 %s
-####响应参数
+#### 响应参数
 %s
 `
 
@@ -115,6 +116,11 @@ func (this *AutoDoc) setRequestRecursive(t reflect.Type,num int) {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
+
+		if !IsCapitalFirst(field.Name) {
+			continue
+		}
+
 		//不处理
 		if field.Tag.Get("json") == "-" {
 			continue
@@ -192,7 +198,7 @@ func (this *AutoDoc) Do() (content string, err error) {
 		this.requestRemark = fmt.Sprintf("\n```\n%s```\n", this.requestRemark)
 	}
 
-	content = fmt.Sprintf(template, this.title, this.url, this.method, this.getRequestParamString(), this.requestRemark, this.responseString)
+	content = fmt.Sprintf(template, this.title, this.url, this.method, this.getRequestParamString(), this.requestRemark,"```\n"+this.responseString+"\n```")
 
 	return
 }
@@ -302,6 +308,10 @@ func (this *AutoDoc) responseStringRecursive(t reflect.Type, name string, space 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
+		if !IsCapitalFirst(field.Name) {
+			continue
+		}
+
 		if field.Tag.Get("json") == "-" || inArray(field.Name, this.noCareField) {
 			continue
 		}
@@ -397,4 +407,48 @@ func getStructTV(obj interface{}) (reflect.Type, reflect.Value, error) {
 	}
 
 	return objT, objV, nil
+}
+
+//大写字母抬头
+func IsCapitalFirst(s string) bool {
+	head:=[]rune(s[0:1])
+
+	if head[0] >= 'A' && head[0] <= 'Z' {
+		return true
+	}
+
+	return false
+	
+}
+
+//设置接口地址
+func (this *AutoDoc)SetUrlAuto()*AutoDoc {
+	pc, _, _, _ := runtime.Caller(2)
+	a := runtime.FuncForPC(pc).Name()
+	arr := strings.Split(a, "_")
+
+	this.SetUrl( strings.ToLower(arr[1]) + "/" + strings.ToLower(arr[2]))
+
+	return this
+}
+
+//设置请求地址
+func (this *AutoDoc) SetUrl(url string) *AutoDoc {
+	this.url = url
+	return this
+}
+
+
+//设置请求方式
+func (this *AutoDoc) SetMethod(method string) *AutoDoc {
+
+	this.method = method
+	return this
+}
+
+//设置接口名称
+func (this *AutoDoc) SetTitle(method string) *AutoDoc {
+
+	this.title = method
+	return this
 }

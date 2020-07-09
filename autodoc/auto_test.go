@@ -21,3 +21,7 @@ func jsonFmt(obj interface{}) {
 	tmp, _ := json.MarshalIndent(obj, "", "     ")
 	fmt.Println(string(tmp))
 }
+
+func TestIsCapitalFirst(t *testing.T)  {
+	IsCapitalFirst("toal")
+}

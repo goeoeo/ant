@@ -1,6 +1,8 @@
 package autodoc
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestNewParseFile(t *testing.T) {
 	p := NewParseFile()
@@ -18,4 +20,8 @@ func TestNewParseFile(t *testing.T) {
 		return
 	}
 	jsonFmt(res)
+}
+
+func TestGinControllerParseFun(t *testing.T) {
+	jsonFmt(GinControllerParseFun("/home/yu/code/flea/api/controller/goods.go"))
 }
