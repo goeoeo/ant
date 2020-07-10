@@ -2,8 +2,10 @@ package util
 
 import (
 	"crypto/md5"
+	"crypto/rand"
+	"encoding/json"
 	"fmt"
-	"math/rand"
+	r "math/rand"
 	"regexp"
 	"strconv"
 	"strings"
@@ -62,17 +64,6 @@ func Long2Ip(ip uint32) string {
 	return fmt.Sprintf("%d.%d.%d.%d", ip>>24, ip<<8>>24, ip<<16>>24, ip<<24>>24)
 }
 
-//生成随机字符串
-func RandomString(num int) string {
-	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]rune, num)
-	rand.Seed(time.Now().Unix())
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
 //保留左边0的字符串加法
 //001+1=002
 func Keep0Add(s string, sep int) string {
@@ -125,4 +116,33 @@ func snakeString(s string) string {
 		data = append(data, d)
 	}
 	return strings.ToLower(string(data[:]))
+}
+
+var alphaNum = []byte(`0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz`)
+
+// RandomCreateBytes generate random []byte by specify chars.
+func RandomCreateBytes(n int, alphabets ...byte) []byte {
+	if len(alphabets) == 0 {
+		alphabets = alphaNum
+	}
+	var bytes = make([]byte, n)
+	var randBy bool
+	if num, err := rand.Read(bytes); num != n || err != nil {
+		r.Seed(time.Now().UnixNano())
+		randBy = true
+	}
+	for i, b := range bytes {
+		if randBy {
+			bytes[i] = alphabets[r.Intn(len(alphabets))]
+		} else {
+			bytes[i] = alphabets[b%byte(len(alphabets))]
+		}
+	}
+	return bytes
+}
+
+//json方式打印结构体
+func JsonPrint(obj interface{}) {
+	tmp, _ := json.MarshalIndent(obj, "", "     ")
+	fmt.Println(string(tmp))
 }
