@@ -3,7 +3,6 @@ module github.com/phpdi/ant
 go 1.13
 
 require (
-	github.com/coreos/bbolt v1.3.4 // indirect
 	github.com/coreos/etcd v3.3.15+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
@@ -24,9 +23,4 @@ require (
 	google.golang.org/genproto v0.0.0-20200702021140-07506425bd67 // indirect
 	google.golang.org/grpc/examples v0.0.0-20200630190442-3de8449f8555 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
-)
-
-replace (
-	github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-	google.golang.org/grpc => google.golang.org/grpc v1.26.0
 )

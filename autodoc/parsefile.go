@@ -133,19 +133,19 @@ func GinControllerParseFun(file string) (outs []Comment) {
 		return
 	}
 
-	re := regexp.MustCompile(fmt.Sprintf(`//([^\n]+)\nfunc ([A-Z][A-Z0-9a-z]*)\(this \*gin.Context\) \{`))
+	re := regexp.MustCompile(fmt.Sprintf(`//([^\n]+)\nfunc \(([A-Z][A-Z0-9a-z]*Controller)\) ([A-Z][A-Z0-9a-z]*)\(ctx \*gin.Context\) \{`))
 	res := re.FindAllStringSubmatch(string(content), -1)
 
 	for _, v := range res {
 
-		if len(v) != 3 {
+		if len(v) != 4 {
 			continue
 		}
 
 		outs = append(outs, Comment{
 			File:   file,
 			Remark: v[1],
-			Method: v[2],
+			Method: fmt.Sprintf("%s_%s",v[2],v[3]),
 		})
 
 	}

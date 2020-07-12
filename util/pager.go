@@ -1,4 +1,4 @@
-package page
+package util
 
 import (
 	"encoding/json"
@@ -9,15 +9,16 @@ import (
 type Pager struct {
 	Page      int         //当前页
 	PageSize  int         //页大小 ,页大小 小于 0 返回所有数据
-	Total     int64       //总量
-	SliceData interface{} //切片源数据
+	total     int64       //总量
+}
+
+//是否进行分页
+func (this *Pager) PageEnable() bool {
+	return this.PageSize > 0
 }
 
 //切片分页 pageSize=-1 返回全部数据
-func (this *Pager) Pagination() error {
-	if this.SliceData == nil {
-		return nil
-	}
+func (this *Pager) Pagination(data interface{}) error {
 
 	var (
 		resSlice []interface{}
@@ -28,11 +29,11 @@ func (this *Pager) Pagination() error {
 		content  []byte
 	)
 
-	if arrSlice, err = this.toSlice(this.SliceData); err != nil {
+	if arrSlice, err = this.toSlice(data); err != nil {
 		return err
 	}
 
-	this.Total = int64(len(arrSlice))
+	this.total = int64(len(arrSlice))
 
 	//分页大小=-1 或者 当前页大小不大于0 不进行分页处理
 	if this.PageSize == -1 || this.Page <= 0 {
@@ -41,8 +42,8 @@ func (this *Pager) Pagination() error {
 
 	start = int64((this.Page - 1) * this.PageSize)
 	end = int64(this.Page * this.PageSize)
-	if end > this.Total {
-		end = this.Total
+	if end > this.total {
+		end = this.total
 	}
 
 	for start < end {
@@ -54,20 +55,21 @@ func (this *Pager) Pagination() error {
 		return err
 	}
 
-	return json.Unmarshal(content, this.SliceData)
+	return json.Unmarshal(content, data)
 }
 
-func (this *Pager) Data(data interface{}) *Pager {
-	this.SliceData = data
-	return this
+
+//总量
+func (this *Pager)Total() int64 {
+	return this.total
 }
 
 //页大小
-func (this *Pager) Size() int {
+func (this *Pager) Limit() int {
 
 	//分页量小于0，返回全部数据
 	if this.PageSize < 0 {
-		return int(this.Total)
+		return int(this.total)
 	}
 
 	return this.PageSize
