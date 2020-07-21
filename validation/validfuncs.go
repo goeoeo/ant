@@ -396,7 +396,7 @@ func IP(validValue interface{}, params ...string) bool {
 // 手机号，有效类型：string
 func Mobile(validValue interface{}, params ...string) bool {
 	if str, ok := validValue.(string); ok {
-		mobilePattern := regexp.MustCompile(`^((\+86)|(86))?(1(([35][0-9])|[8][0-9]|[7][06789]|[4][579]))\d{8}$`)
+		mobilePattern := regexp.MustCompile(`^((\+86)|(86))?(1([3456789]))\d{9}$`)
 		return mobilePattern.MatchString(str)
 	}
 	return false

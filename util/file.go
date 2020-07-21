@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -57,71 +58,79 @@ func File2Data(filePath string, data interface{}) error {
 	return json.Unmarshal(content, data)
 }
 
-//按照日期存储文件
-func SaveFileWithDate(dir string, file multipart.File, fileHeader *multipart.FileHeader, randName bool) (filePath string /*上传的文件路径*/, err error) {
-
-	var (
-		fileNameArr []string
-		fileSuffix  string //文件后缀
-
-		newFile *os.File
-		ok      bool
-	)
-
-	//取文件前缀
-	if fileHeader == nil {
-		return "", errors.New("文件不存在")
-	}
-
-	fileNameArr = strings.Split(fileHeader.Filename, ".")
-	if len(fileNameArr) < 1 {
-		return "", errors.New("文件名错误")
-	}
-
-	fileSuffix = "." + fileNameArr[len(fileNameArr)-1]
-
-	//计算目录
-	today := time.Now().Format("2006-01-02")
-
-	dir = strings.TrimRight(dir, "/") + "/" + today
-
-	if ok, err = PathExists(dir); err != nil {
-		return
-	}
-	//今日目录不存在创建
-	if !ok {
-		if err = os.MkdirAll(dir, os.ModePerm); err != nil {
-			return
-		}
-	}
-
-	if randName {
-		filePath = dir + "/" + string(RandomCreateBytes(16)) + fileSuffix
-	} else {
-		filePath = dir + "/" + fileHeader.Filename
-	}
-
-	//检查文件是否存在
-	if ok, err = PathExists(filePath); err != nil {
-		return
-	}
-
-	if ok {
-		return "", errors.New("文件已存在")
-	}
-
-	//新文件
-	if newFile, err = os.Create(filePath); err != nil {
-		return "", err
-	}
-	defer newFile.Close()
-
-	if _, err = io.Copy(newFile, file); err != nil {
-		return "", err
-	}
-
-	return
-}
+////按照日期存储文件
+//func SaveFileWithDate(dir string, fileHeader *multipart.FileHeader, randName bool) (filePath string /*上传的文件路径*/, err error) {
+//
+//	var (
+//		fileNameArr []string
+//		fileSuffix  string //文件后缀
+//
+//		newFile *os.File
+//		file    *os.File
+//		ok      bool
+//	)
+//
+//	//取文件前缀
+//	if fileHeader == nil {
+//		return "", errors.New("文件不存在")
+//	}
+//
+//	fileNameArr = strings.Split(fileHeader.Filename, ".")
+//	if len(fileNameArr) < 1 {
+//		return "", errors.New("文件名错误")
+//	}
+//
+//	fileSuffix = "." + fileNameArr[len(fileNameArr)-1]
+//
+//	//计算目录
+//	today := time.Now().Format("2006-01-02")
+//
+//	dir = strings.TrimRight(dir, "/") + "/" + today
+//
+//	if ok, err = PathExists(dir); err != nil {
+//		return
+//	}
+//	//今日目录不存在创建
+//	if !ok {
+//		if err = os.MkdirAll(dir, os.ModePerm); err != nil {
+//			return
+//		}
+//	}
+//
+//	if randName {
+//		filePath = dir + "/" + string(RandomCreateBytes(16)) + fileSuffix
+//	} else {
+//		filePath = dir + "/" + fileHeader.Filename
+//	}
+//
+//	//检查文件是否存在
+//	if ok, err = PathExists(filePath); err != nil {
+//		return
+//	}
+//
+//	if ok {
+//		return "", errors.New("文件已存在")
+//	}
+//
+//	//原文件
+//	if file, err = os.Open(fileHeader.Filename); err != nil {
+//		return err
+//	}
+//
+//	defer file.Close()
+//
+//	//新文件
+//	if newFile, err = os.Create(filePath); err != nil {
+//		return "", err
+//	}
+//	defer newFile.Close()
+//
+//	if _, err = io.Copy(newFile, file); err != nil {
+//		return "", err
+//	}
+//
+//	return
+//}
 
 //计算文件路径
 func FilePathWithDate(dir string, fileName string) (path string, err error) {
@@ -166,13 +175,23 @@ func CheckFile(fileHeader *multipart.FileHeader, size int64 /*支持的大小，
 	fileSuffix = "." + fileNameArr[len(fileNameArr)-1]
 
 	//格式检查
-	if len(suffix) > 0 && !InArray(fileSuffix, suffix) {
-		return errors.New("不支持的文件格式")
+	if len(suffix) > 0 {
+		find := false
+		for _, v := range suffix {
+			if strings.ToLower(fileSuffix) == strings.ToLower(v) {
+				find = true
+				break
+			}
+		}
+
+		if !find {
+			return errors.New("不支持的文件格式")
+		}
 	}
 
 	//大小检查
-	if fileHeader.Size > size {
-		return errors.New("文件过大")
+	if fileHeader.Size > size*1000 {
+		return fmt.Errorf("文件过大:%d",fileHeader.Size)
 	}
 
 	return nil
@@ -240,4 +259,64 @@ func FileSha1(file io.Reader) (string, error) {
 	}
 
 	return hex.EncodeToString(_sha1.Sum(nil)), nil
+}
+
+
+
+//根据日期转移文件
+func MoveFileWithDate(filePath string, dir string, randName bool) (newPath string, err error) {
+	var (
+		fileSuffix string //文件后缀
+		fileName   string //文件名
+		file       *os.File
+		newFile    *os.File
+	)
+	if arr := strings.Split(filePath, "/"); len(arr) > 0 {
+		fileName = arr[len(arr)-1]
+	} else {
+		return "", errors.New("文件名解析错误")
+	}
+
+	if arr := strings.Split(fileName, "."); len(arr) > 0 {
+		fileSuffix = "." + arr[len(arr)-1]
+	} else {
+		return "", errors.New("文件后缀名解析错误")
+	}
+
+	//计算目录
+	today := time.Now().Format("2006-01-02")
+	dir = strings.TrimRight(dir, "/") + "/" + today
+	//今日目录不存在创建
+	if !IsFileExist(dir) {
+		if err = os.MkdirAll(dir, os.ModePerm); err != nil {
+			return
+		}
+	}
+
+	if randName {
+		newPath = dir + "/" + string(RandomCreateBytes(16)) + fileSuffix
+	} else {
+		newPath = dir + "/" + fileName
+	}
+
+	//检查文件是否存在
+	if IsFileExist(newPath) {
+		return "", errors.New("文件已存在")
+	}
+
+	if file, err = os.Open(filePath); err != nil {
+		return
+	}
+	defer file.Close()
+
+	//新文件
+	if newFile, err = os.Create(newPath); err != nil {
+		return
+	}
+	defer newFile.Close()
+
+	_, err = io.Copy(newFile, file)
+
+	return
+
 }

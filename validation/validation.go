@@ -48,6 +48,7 @@ func (this *Validation) SetFailMessages(failMessages map[string]string) *Validat
 //获取字段对应的错误信息
 func (this *Validation) getError(field string, name string, msg string) error {
 
+
 	//自定义的错误提示优先
 	if msg, ok := this.failMessages[field]; ok {
 		return errors.New(msg)
@@ -56,6 +57,10 @@ func (this *Validation) getError(field string, name string, msg string) error {
 	//使用拼接的方式提示错误
 	if name == "" {
 		name = field
+	}
+
+	if nameArr := strings.Split(name, ";"); len(nameArr) > 0 {
+		name = nameArr[0]
 	}
 
 	return errors.New(name + msg)
