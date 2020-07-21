@@ -19,20 +19,7 @@ func init() {
 	dislockRedis = NewDisLockRedis("a", c)
 
 }
-func TestDisLockRedis_grant(t *testing.T) {
-	err := dislockRedis.grant()
-	if err != nil {
-		t.Error(err)
-	}
-}
-func TestDisLockRedis_TryLock1(t *testing.T) {
-	//err:=dislockRedis.TryLock()
-	//if err != nil {
-	//	t.Error(err)
-	//}
 
-	worker(1)
-}
 func TestDisLockRedis_TryLock(t *testing.T) {
 	//err:=dislockRedis.TryLock()
 	//if err != nil {
