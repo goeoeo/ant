@@ -7,69 +7,60 @@ import (
 )
 
 type Pager struct {
-	Page      int         //当前页
-	PageSize  int         //页大小 ,页大小 小于 0 返回所有数据
-	total     int64       //总量
+	Page     int   //当前页
+	PageSize int   //页大小 ,页大小 小于 0 返回所有数据
+	Error    error `json:"-"`
+	total    int64 `json:"-"` //总量
 }
 
 //是否进行分页
 func (this *Pager) PageEnable() bool {
-	return this.PageSize > 0
+	return this.PageSize > 0 && this.Page > 0
 }
 
 //切片分页 pageSize=-1 返回全部数据
-func (this *Pager) Pagination(data interface{}) error {
-
+func (this *Pager) Pagination(data interface{}) *Pager {
 	var (
 		resSlice []interface{}
-		arrSlice []interface{}
-		start    int64
-		end      int64
 		err      error
 		content  []byte
 	)
 
-	if arrSlice, err = this.toSlice(data); err != nil {
-		return err
+	defer func() {
+		if err != nil {
+			this.Error = err
+		}
+	}()
+
+	if resSlice, err = this.toSlice(data); err != nil {
+		return this
 	}
 
-	this.total = int64(len(arrSlice))
-
-	//分页大小=-1 或者 当前页大小不大于0 不进行分页处理
-	if this.PageSize == -1 || this.Page <= 0 {
-		return nil
+	//不进行分页
+	if !this.PageEnable() {
+		return this
 	}
 
-	start = int64((this.Page - 1) * this.PageSize)
-	end = int64(this.Page * this.PageSize)
-	if end > this.total {
-		end = this.total
+	if content, err = json.Marshal(resSlice); err == nil {
+		if err = json.Unmarshal(content, data); err != nil {
+			return this
+		}
 	}
 
-	for start < end {
-		resSlice = append(resSlice, arrSlice[start])
-		start++
-	}
-
-	if content, err = json.Marshal(resSlice); err != nil {
-		return err
-	}
-
-	return json.Unmarshal(content, data)
+	return this
 }
 
-
 //总量
-func (this *Pager)Total() int64 {
-	return this.total
+func (this *Pager) Total(total *int64) *Pager {
+	*total = this.total
+	return this
 }
 
 //页大小
 func (this *Pager) Limit() int {
 
-	//分页量小于0，返回全部数据
-	if this.PageSize < 0 {
-		return int(this.total)
+	if !this.PageEnable() {
+		return 0
 	}
 
 	return this.PageSize
@@ -78,7 +69,7 @@ func (this *Pager) Limit() int {
 //偏移量
 func (this *Pager) Offset() int {
 
-	if this.PageSize < 0 {
+	if !this.PageEnable() {
 		return 0
 	}
 
@@ -91,7 +82,7 @@ func (this *Pager) Offset() int {
 }
 
 //slice interface 变数组
-func (this *Pager) toSlice(arr interface{}) ([]interface{}, error) {
+func (this *Pager) toSlice(arr interface{}) (res []interface{}, err error) {
 	v := reflect.ValueOf(arr)
 	if v.Kind() != reflect.Ptr {
 		return []interface{}{}, errors.New("分页源数据必须为切片指针")
@@ -102,10 +93,27 @@ func (this *Pager) toSlice(arr interface{}) ([]interface{}, error) {
 		return []interface{}{}, errors.New("分页源数据必须为切片指针.")
 	}
 
-	l := ve.Len()
-	ret := make([]interface{}, l)
-	for i := 0; i < l; i++ {
-		ret[i] = ve.Index(i).Interface()
+	//数据总量
+	this.total = int64(ve.Len())
+
+	if !this.PageEnable() {
+		return
 	}
-	return ret, nil
+
+	res = []interface{}{}
+
+	limit := this.Limit()
+	offset := this.Offset()
+	start := 0
+
+	for {
+		if start >= limit || start+offset >= int(this.total) {
+			break
+		}
+
+		res = append(res, ve.Index(start+offset).Interface())
+		start++
+	}
+
+	return
 }
