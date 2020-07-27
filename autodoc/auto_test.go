@@ -22,6 +22,12 @@ func jsonFmt(obj interface{}) {
 	fmt.Println(string(tmp))
 }
 
-func TestIsCapitalFirst(t *testing.T)  {
+func TestIsCapitalFirst(t *testing.T) {
 	IsCapitalFirst("toal")
+}
+
+func TestAutoDoc_ReplaceDoc(t *testing.T) {
+	a := New(nil, nil)
+	a.SetTitle("登录")
+	a.ReplaceDoc("autodoc.md")
 }

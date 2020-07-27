@@ -2,28 +2,30 @@ package autodoc
 
 import (
 	"fmt"
+	"github.com/phpdi/ant/util"
+	"io/ioutil"
+	"os"
 	"reflect"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
 )
 
 const (
-	template = `
-### %s
+	template = `### %s   
+请求地址: %s  
+请求方式: %s  
+请求参数:    
 
-请求地址：%s
-
-请求方式：%s
-
-#### 请求参数
 | 参数   | 类型  | 必填 | 说明 |
 | :---:   | :---: | :---: | :---: |
 %s
-#### 类型备注
+类型备注:      
 %s
-#### 响应参数
+响应参数:    
 %s
+### 
 `
 
 	structTagField = "field"
@@ -36,11 +38,10 @@ type (
 		url    string // 请求地址
 		title  string //接口标题
 
-		req interface{} //请求参数
-		ack interface{} //响应参数
-		requestCareField []string       //非必填字段,为空，表示所有结构体字段都是非必填字段
-		noCareField      []string       //不关心字段
-
+		req              interface{} //请求参数
+		ack              interface{} //响应参数
+		requestCareField []string    //非必填字段,为空，表示所有结构体字段都是非必填字段
+		noCareField      []string    //不关心字段
 
 		requiredFields []string //必填字段
 
@@ -81,6 +82,13 @@ func (this *AutoDoc) SetExtInfo(url string, method string, title string) *AutoDo
 	return this
 }
 
+//只关心必填字段
+func (this *AutoDoc) RequireFiledOnly(fields ...string) *AutoDoc {
+	this.requiredFields = append(this.requiredFields, fields...)
+	this.requestCareField = append(this.requestCareField, fields...)
+	return this
+}
+
 //必填字段
 func (this *AutoDoc) Require(fields ...string) *AutoDoc {
 	this.requiredFields = append(this.requiredFields, fields...)
@@ -88,8 +96,7 @@ func (this *AutoDoc) Require(fields ...string) *AutoDoc {
 	return this
 }
 
-
-func (this *AutoDoc) setRequestRecursive(t reflect.Type,num int) {
+func (this *AutoDoc) setRequestRecursive(t reflect.Type, num int) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("字段名称：", t.Name())
@@ -100,9 +107,9 @@ func (this *AutoDoc) setRequestRecursive(t reflect.Type,num int) {
 		requestParams []RequestParam
 	)
 
-	if num>= 4 {
+	if num >= 4 {
 		return
-	}else{
+	} else {
 		num++
 	}
 
@@ -110,12 +117,8 @@ func (this *AutoDoc) setRequestRecursive(t reflect.Type,num int) {
 		return
 	}
 
-
-
-
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-
 
 		if !IsCapitalFirst(field.Name) {
 			continue
@@ -155,7 +158,7 @@ func (this *AutoDoc) setRequestRecursive(t reflect.Type,num int) {
 		}
 
 		if item.Field == item.FieldType {
-			this.setRequestRecursive(field.Type,num)
+			this.setRequestRecursive(field.Type, num)
 			continue
 		}
 
@@ -176,29 +179,36 @@ func (this *AutoDoc) setRequestRecursive(t reflect.Type,num int) {
 	this.SetRequestParam(requestParams)
 
 }
+
 //设置参数数据
 func (this *AutoDoc) SetRequestParam(requestParams []RequestParam) *AutoDoc {
 	this.requestParams = append(this.requestParams, requestParams...)
 
 	return this
 }
+
 //执行计算
 func (this *AutoDoc) Do() (content string, err error) {
 	//计算requestParams
-	reqT, _, _ := getStructTV(this.req)
-	this.setRequestRecursive(reqT,0)
+	if this.req != nil {
+		reqT, _, _ := getStructTV(this.req)
+		this.setRequestRecursive(reqT, 0)
+	}
 
 	//计算responseString
-	ackT, _, _ := getStructTV(this.ack)
-	this.responseString = this.responseStringRecursive(ackT, "", "    ", false,0)
+	if this.ack != nil {
+		ackT, _, _ := getStructTV(this.ack)
+		this.responseString = this.responseStringRecursive(ackT, "", "    ", false, 0)
 
-	this.responseString = strings.Trim(strings.Trim(this.responseString, " "), "\n")
+		this.responseString = strings.Trim(strings.Trim(this.responseString, " "), "\n")
+
+	}
 
 	if this.requestRemark != "" {
 		this.requestRemark = fmt.Sprintf("\n```\n%s```\n", this.requestRemark)
 	}
 
-	content = fmt.Sprintf(template, this.title, this.url, this.method, this.getRequestParamString(), this.requestRemark,"```\n"+this.responseString+"\n```")
+	content = fmt.Sprintf(template, this.title, this.url, this.method, this.getRequestParamString(), this.requestRemark, "```\n"+this.responseString+"\n```")
 
 	return
 }
@@ -259,10 +269,10 @@ func (this *AutoDoc) getRequestParamString() (requestString string) {
 }
 
 //递归生成输出参数
-func (this *AutoDoc) responseStringRecursive(t reflect.Type, name string, space string, embed bool,num int) (s string) {
-	if num>= 4 {
+func (this *AutoDoc) responseStringRecursive(t reflect.Type, name string, space string, embed bool, num int) (s string) {
+	if num >= 4 {
 		return
-	}else{
+	} else {
 		num++
 	}
 
@@ -303,8 +313,6 @@ func (this *AutoDoc) responseStringRecursive(t reflect.Type, name string, space 
 		return ""
 	}
 
-
-
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
@@ -321,12 +329,9 @@ func (this *AutoDoc) responseStringRecursive(t reflect.Type, name string, space 
 			continue
 		}
 
-
-
 		switch field.Type.Kind() {
 		case reflect.Ptr:
 			fieldType := field.Type.String()
-
 
 			if strings.Contains(fieldType, ".") {
 				fieldTypeArr := strings.Split(fieldType, ".")
@@ -339,14 +344,14 @@ func (this *AutoDoc) responseStringRecursive(t reflect.Type, name string, space 
 
 			if fieldType == field.Name {
 				//嵌入的结构体
-				s += this.responseStringRecursive(field.Type, "", space, true,num)
+				s += this.responseStringRecursive(field.Type, "", space, true, num)
 
 			} else {
-				s += this.responseStringRecursive(field.Type, field.Name, "    "+space, false,num)
+				s += this.responseStringRecursive(field.Type, field.Name, "    "+space, false, num)
 			}
 
 		case reflect.Slice, reflect.Struct, reflect.Interface:
-			s += this.responseStringRecursive(field.Type, field.Name, "    "+space, false,num)
+			s += this.responseStringRecursive(field.Type, field.Name, "    "+space, false, num)
 
 		case reflect.String, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Bool:
 
@@ -411,23 +416,23 @@ func getStructTV(obj interface{}) (reflect.Type, reflect.Value, error) {
 
 //大写字母抬头
 func IsCapitalFirst(s string) bool {
-	head:=[]rune(s[0:1])
+	head := []rune(s[0:1])
 
 	if head[0] >= 'A' && head[0] <= 'Z' {
 		return true
 	}
 
 	return false
-	
+
 }
 
 //设置接口地址
-func (this *AutoDoc)SetUrlAuto()*AutoDoc {
+func (this *AutoDoc) SetUrlAuto() *AutoDoc {
 	pc, _, _, _ := runtime.Caller(2)
 	a := runtime.FuncForPC(pc).Name()
 	arr := strings.Split(a, "_")
 
-	this.SetUrl( strings.ToLower(arr[1]) + "/" + strings.ToLower(arr[2]))
+	this.SetUrl(strings.ToLower(arr[1]) + "/" + strings.ToLower(arr[2]))
 
 	return this
 }
@@ -437,7 +442,6 @@ func (this *AutoDoc) SetUrl(url string) *AutoDoc {
 	this.url = url
 	return this
 }
-
 
 //设置请求方式
 func (this *AutoDoc) SetMethod(method string) *AutoDoc {
@@ -450,5 +454,43 @@ func (this *AutoDoc) SetMethod(method string) *AutoDoc {
 func (this *AutoDoc) SetTitle(method string) *AutoDoc {
 
 	this.title = method
+	return this
+}
+
+//从文件中抓出接口段并替换
+func (this *AutoDoc) ReplaceDoc(filePath string) (err error) {
+	var (
+		create string
+
+		oldContent []byte
+		newContent []byte
+	)
+
+	if create, err = this.Do(); err != nil {
+		return
+	}
+
+	//文件不存在创建
+	if !util.IsFileExist(filePath) {
+		return ioutil.WriteFile(filePath, []byte(create), os.ModePerm)
+	}
+
+	if oldContent, err = ioutil.ReadFile(filePath); err != nil {
+		return
+	}
+
+	re := regexp.MustCompile(fmt.Sprintf("(?s)### %s(.*?)### ", this.title))
+	if re.Match(oldContent) {
+		newContent = re.ReplaceAll(oldContent, []byte(create))
+	} else {
+		newContent = append(oldContent, []byte(create)...)
+	}
+
+	return ioutil.WriteFile(filePath, newContent, os.ModePerm)
+
+}
+
+func (this *AutoDoc) SetNoCareField(fields ...string) *AutoDoc {
+	this.noCareField = append(this.noCareField, fields...)
 	return this
 }

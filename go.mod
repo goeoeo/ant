@@ -16,6 +16,8 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6 // indirect
 	github.com/prometheus/client_golang v1.7.1 // indirect
+	github.com/russross/blackfriday v2.0.0+incompatible // indirect
+	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/silenceper/wechat/v2 v2.0.1 // indirect
 	github.com/spf13/cobra v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

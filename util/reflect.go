@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -150,4 +151,19 @@ func InArray(element interface{}, slice interface{}) bool {
 	}
 
 	return false
+}
+
+//结构体转换
+func ConvStruct(src interface{}, dist interface{}) (err error) {
+	var content []byte
+	if src == nil {
+		return nil
+	}
+
+	if content, err = json.Marshal(src); err != nil {
+		return
+
+	}
+
+	return json.Unmarshal(content, dist)
 }
