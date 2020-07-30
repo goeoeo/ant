@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	template = `### %s   
+	template = `## %s   
 请求地址: %s  
 请求方式: %s  
 请求参数:    
@@ -25,7 +25,7 @@ const (
 %s
 响应参数:    
 %s
-### 
+## 
 `
 
 	structTagField = "field"
@@ -479,7 +479,7 @@ func (this *AutoDoc) ReplaceDoc(filePath string) (err error) {
 		return
 	}
 
-	re := regexp.MustCompile(fmt.Sprintf("(?s)### %s(.*?)### ", this.title))
+	re := regexp.MustCompile(fmt.Sprintf("(?s)## %s(.*?)## ", this.title))
 	if re.Match(oldContent) {
 		newContent = re.ReplaceAll(oldContent, []byte(create))
 	} else {
