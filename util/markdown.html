@@ -1,0 +1,214 @@
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<link href="https://cdn.bootcdn.net/ajax/libs/github-markdown-css/4.0.0/github-markdown.css" rel="stylesheet">
+	</head>
+	<style>
+		.markdown-body {
+			box-sizing: border-box;
+			min-width: 200px;
+			max-width: 980px;
+			margin: 0 auto;
+			padding: 45px;
+		}
+	
+		@media (max-width: 767px) {
+			.markdown-body {
+				padding: 15px;
+			}
+		}
+	</style>
+	<body class="markdown-body">
+	<h2>联系方式</h2>
+
+<ul>
+<li>手机：18408248122</li>
+<li>Email：977564830@qq.com</li>
+<li>QQ：977564830</li>
+</ul>
+
+<h2>个人信息</h2>
+
+<ul>
+<li>陈誉/男/1994</li>
+<li>本科/西华大学建筑系</li>
+<li>工作年限：4年</li>
+<li>技术博客：<a href="http://phpdi.github.io">http://phpdi.github.io</a></li>
+<li>Github：<a href="http://github.com/phpdi">http://github.com/phpdi</a></li>
+<li>期望职位：Go中级程序员</li>
+<li>期望薪资：15k~20k</li>
+<li>期望城市：成都</li>
+</ul>
+
+<h2>工作经历</h2>
+
+<h3>成都领沃网络技术有限公司 （ 2018年12月 ~ 至今 ）</h3>
+
+<h4>领沃云控制台项目</h4>
+
+<p>整个项目采用docker容器管理方式，采用微服务方式进行项目开发。<br />
+我负责领沃api的开发和架构工作，其中包括:</p>
+
+<ul>
+<li>api数据库设计以及模块实现（用户模块、网吧模块、机房模块、启动管理模块）<br />
+</li>
+<li>剥离用户模块为单独的服务，提供用户管理和认证功能<br />
+</li>
+<li>编写api文档自动生成工具和权限自动生成工具，极大提高工作效率<br />
+</li>
+<li>使用Consul + Nginx + Consul-Template + Registrator 实现动态的负载均衡，使得扩容非常方便</li>
+<li>利用kafka消息系统，实现机房自动化升级，解决大量机房升级耗时过长问题，</li>
+<li>编写grcp服务端，实现api到机房代理端反向代理，避免机房暴露端口问题</li>
+<li>搭建redis集群服务，保证缓存系统的可用性</li>
+</ul>
+
+<blockquote>
+<p>技术涉及: go、mysql主从同步、redis集群、自动负载均衡、grpc、kafka、docker</p>
+</blockquote>
+
+<h4>文件存储系统</h4>
+
+<p>此系统实现的目的是为领沃云控制台上传文件功能提供单独的服务</p>
+
+<p>整个系统的实现,其中包括：</p>
+
+<ul>
+<li>基于Hash计算实现秒传</li>
+<li>用户系统，使用jwt认证用户</li>
+<li>实现分块上传及断点续传</li>
+</ul>
+
+<blockquote>
+<p>技术涉及: go、mysql、redis</p>
+</blockquote>
+
+<h3>深圳融信通金融服务有限公司 （ 2017年6月 ~ 2018年11月 ）</h3>
+
+<h4>印尼现金贷项目</h4>
+
+<p>印尼现金贷是面向印尼的贷款项目,主要实现用户借款与还款的业务.</p>
+
+<p>主要负责：</p>
+
+<ul>
+<li>完成用户,权限等基本逻辑</li>
+<li>使用加密方式与前端app进行通信</li>
+<li>采集用户数据，利用rabbitmq消息队列，异步入库，用于风控评估</li>
+<li>用户借款相关逻辑</li>
+<li>借助第三方OCR实现用户实名认证，提取身份证信息</li>
+<li>完成相关的与第三交互的模块,支付,短信</li>
+</ul>
+
+<blockquote>
+<p>技术涉及: go、mysql、jwt、rabbitmq、加密通信</p>
+</blockquote>
+
+<h4>房屋租赁平台</h4>
+
+<p>该项目采用http版微服务的架构模式,由不同服务模块提供http服务供客户端调用<br />
+应用端包括三个端,房东端,租客端,运营管理平台.</p>
+
+<p>主要负责：</p>
+
+<ul>
+<li>设计完成账务模块,用于房东查看账单</li>
+<li>设计完成合同模块,借助第三方生成合同，房东，租客完成线上签约</li>
+<li>租客银行卡模块，利用银行卡认证用户，以及绑卡扣款</li>
+<li>房源模块
+
+<ul>
+<li>房源入库</li>
+<li>房源带看</li>
+<li>房源交割</li>
+<li>房源查询功能 (使用elasticsearch实现)</li>
+<li>房源与用户距离(redis计算地理位置)</li>
+</ul></li>
+</ul>
+
+<blockquote>
+<p>技术涉及: go、mysql、redis、docker、elasticsearch、微信公众号</p>
+</blockquote>
+
+<h3>成都娇子兴业实业有限公司 （ 2016年3月 ~ 2017年5月 ）</h3>
+
+<h4>领呗商城项目</h4>
+
+<p>娇子旗下，佣金电商项目，公司与各个代理店，以及各商家合作，赠与用户领购币，用户到各商家消费时，可用领购币，进行消费，领购币由各代理店或商家赠出，可充值，可提现，引导用户使用领购币，代替现金交易。</p>
+
+<p>主要负责：</p>
+
+<ul>
+<li>设计完成商品分类模块，支持无限级分类</li>
+<li>众筹模块</li>
+<li>商品管理模块，SKU</li>
+<li>Elasticsearch 搜索
+
+<ul>
+<li>关键词搜索</li>
+<li>分面搜索</li>
+<li>同义词搜索</li>
+<li>推荐相似商品</li>
+</ul></li>
+<li>秒杀模块</li>
+<li>即时通讯（客服系统）</li>
+</ul>
+
+<blockquote>
+<p>技术涉及: go、mysql、redis、elasticsearch、websocket</p>
+</blockquote>
+
+<h4>娇子基金公众号项目</h4>
+
+<p>类似于水滴互助，用户通过公众号加入后台发布的计划。如果有人患上癌症，加入计划的人会进行均摊一些医疗费用。</p>
+
+<p>主要负责：</p>
+
+<ul>
+<li>数据库设计优化</li>
+<li>后端管理平台</li>
+<li>前端代码实现</li>
+<li>微信交互，微信支付</li>
+</ul>
+
+<blockquote>
+<p>技术涉及: php、mysql、memcache、js、css、html</p>
+</blockquote>
+
+<h3>开源项目</h3>
+
+<ul>
+<li><a href="https://github.com/phpdi/swoole-auto-restart">swooleAutoRestart</a></li>
+</ul>
+
+<h3>技术文章</h3>
+
+<ul>
+<li><a href="https://phpdi.github.io/2020/04/01/nginx/%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8nginx%E8%BF%9B%E8%A1%8C%E8%87%AA%E5%8A%A8%E5%8C%96%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/">如何利用nginx进行自动化负载均衡</a></li>
+<li><a href="https://phpdi.github.io/2020/04/01/git/%E5%BF%AB%E9%80%9F%E8%AE%A4%E8%AF%86Git/">快速认识Git</a></li>
+<li><a href="https://phpdi.github.io/2020/04/01/go/gomod/">gomod</a></li>
+</ul>
+
+<h2>技能清单</h2>
+
+<p>以下均为我熟练使用的技能</p>
+
+<ul>
+<li>开发环境：Linux</li>
+<li>语言：Go/PHP</li>
+<li>框架：Gin/Beego/Laravel/Yii/ThinkPHP</li>
+<li>数据库相关：MySQL/SQLite/Redis/Memcache/Elasticsearch</li>
+<li>消息队列：Kafka/Rabbitmq</li>
+<li>版本管理、文档和自动化部署工具：Git/Svn/eoLinker/Composer/Gomod</li>
+<li>容器相关：Docker/docker-compose/docker-swarm</li>
+<li>微服务相关: Etcd/Grpc/Go-micro</li>
+<li>单元测试：GoTest/PHPUnit</li>
+<li>开放平台：微信应用开发</li>
+</ul>
+
+<h2>致谢</h2>
+
+<p>感谢您花时间阅读我的简历，期待能有机会和您共事。</p>
+
+	<body>
+</html>	
