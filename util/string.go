@@ -146,3 +146,17 @@ func JsonPrint(obj interface{}) {
 	tmp, _ := json.MarshalIndent(obj, "", "     ")
 	fmt.Println(string(tmp))
 }
+
+//去重
+func UniqueStrings(s []string) (o []string)  {
+	m:= make(map[string]struct{})
+	for _,v:=range s {
+		m[v]= struct{}{}
+	}
+
+	for k:=range m {
+		o=append(o,k)
+	}
+
+	return
+}
