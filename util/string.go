@@ -148,14 +148,20 @@ func JsonPrint(obj interface{}) {
 }
 
 //去重
-func UniqueStrings(s []string) (o []string)  {
-	m:= make(map[string]struct{})
-	for _,v:=range s {
-		m[v]= struct{}{}
-	}
+func UniqueStrings(nums []string) (o []string) {
+	for _, v := range nums {
+		find := false
+		for _, v1 := range o {
+			if v1 == v {
+				find = true
+				break
+			}
+		}
 
-	for k:=range m {
-		o=append(o,k)
+		if !find {
+			o = append(o, v)
+		}
+
 	}
 
 	return

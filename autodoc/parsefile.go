@@ -104,7 +104,7 @@ func BeegoControllerParseFun(file string) (outs []Comment) {
 		outs = append(outs, Comment{
 			File:   file,
 			Remark: v[1],
-			Method: v[3],
+			Method: fmt.Sprintf("%s_%s", v[2], v[3]),
 		})
 
 	}
@@ -145,7 +145,7 @@ func GinControllerParseFun(file string) (outs []Comment) {
 		outs = append(outs, Comment{
 			File:   file,
 			Remark: v[1],
-			Method: fmt.Sprintf("%s_%s",v[2],v[3]),
+			Method: fmt.Sprintf("%s_%s", v[2], v[3]),
 		})
 
 	}

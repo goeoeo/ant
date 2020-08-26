@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-const (
-	template = `## %s   
+var (
+	Template = `## %s   
 请求地址: %s  
 请求方式: %s  
 请求参数:    
@@ -28,7 +28,7 @@ const (
 ## 
 `
 
-	structTagField = "field"
+	StructTagField = "field"
 )
 
 type (
@@ -82,10 +82,21 @@ func (this *AutoDoc) SetExtInfo(url string, method string, title string) *AutoDo
 	return this
 }
 
+func (this *AutoDoc) SetRequest(req interface{}, requireFields ...string) *AutoDoc {
+	this.req = req
+	return this.Require(requireFields...)
+}
+
+func (this *AutoDoc) SetResponse(ack interface{}, careFields ...string) *AutoDoc {
+	this.requestCareField = append(this.requestCareField, careFields...)
+	this.ack = ack
+	return this
+}
+
 //只关心必填字段
 func (this *AutoDoc) RequireFiledOnly(fields ...string) *AutoDoc {
 	this.requiredFields = append(this.requiredFields, fields...)
-	this.requestCareField = append(this.requestCareField, fields...)
+	this.SetCareField(fields...)
 	return this
 }
 
@@ -125,7 +136,7 @@ func (this *AutoDoc) setRequestRecursive(t reflect.Type, num int) {
 		}
 
 		//不处理
-		if field.Tag.Get("json") == "-" {
+		if field.Tag.Get("json") == "-" || inArray(field.Name, this.noCareField) {
 			continue
 		}
 
@@ -154,7 +165,7 @@ func (this *AutoDoc) setRequestRecursive(t reflect.Type, num int) {
 			Field:     field.Name,
 			FieldType: fieldType,
 			Required:  inArray(field.Name, this.requiredFields),
-			Desc:      field.Tag.Get(structTagField),
+			Desc:      field.Tag.Get(StructTagField),
 		}
 
 		if item.Field == item.FieldType {
@@ -208,15 +219,30 @@ func (this *AutoDoc) Do() (content string, err error) {
 		this.requestRemark = fmt.Sprintf("\n```\n%s```\n", this.requestRemark)
 	}
 
-	content = fmt.Sprintf(template, this.title, this.url, this.method, this.getRequestParamString(), this.requestRemark, "```\n"+this.responseString+"\n```")
+	content = fmt.Sprintf(Template, this.title, this.url, this.method, this.getRequestParamString(), this.requestRemark, "```\n"+this.responseString+"\n```")
 
 	return
+}
+
+func (this *AutoDoc) Create() {
+	var (
+		content string
+		err     error
+	)
+
+	if content, err = this.Do(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	ioutil.WriteFile("./autodoc.md", []byte(content), os.ModePerm)
+
 }
 
 //设置备注
 func (this *AutoDoc) setRequestRemark(t reflect.Type) {
 
-	if t.Kind() == reflect.Slice {
+	if t.Kind() == reflect.Slice || t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
 
@@ -231,7 +257,7 @@ func (this *AutoDoc) setRequestRemark(t reflect.Type) {
 			continue
 		}
 
-		tag := field.Tag.Get(structTagField)
+		tag := field.Tag.Get(StructTagField)
 		if tag != "" {
 			tag = "//" + tag
 		}
@@ -355,7 +381,7 @@ func (this *AutoDoc) responseStringRecursive(t reflect.Type, name string, space 
 
 		case reflect.String, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.Bool:
 
-			tag := field.Tag.Get(structTagField)
+			tag := field.Tag.Get(StructTagField)
 			if tag != "" {
 				tag = "//" + tag
 			}
@@ -428,7 +454,7 @@ func IsCapitalFirst(s string) bool {
 
 //设置接口地址
 func (this *AutoDoc) SetUrlAuto() *AutoDoc {
-	pc, _, _, _ := runtime.Caller(2)
+	pc, _, _, _ := runtime.Caller(1)
 	a := runtime.FuncForPC(pc).Name()
 	arr := strings.Split(a, "_")
 
@@ -492,5 +518,10 @@ func (this *AutoDoc) ReplaceDoc(filePath string) (err error) {
 
 func (this *AutoDoc) SetNoCareField(fields ...string) *AutoDoc {
 	this.noCareField = append(this.noCareField, fields...)
+	return this
+}
+
+func (this *AutoDoc) SetCareField(fields ...string) *AutoDoc {
+	this.requestCareField = append(this.requestCareField, fields...)
 	return this
 }
