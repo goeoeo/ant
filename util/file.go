@@ -320,3 +320,55 @@ func MoveFileWithDate(filePath string, dir string, randName bool) (newPath strin
 	return
 
 }
+
+
+//扫描路径：dirPath
+//扫描类型：scanType。0=全部，1=文件夹，2=文件
+func ScanPath(dirPath string, scanType int) (fileList map[string]os.FileInfo, err error) {
+	fileList = make(map[string]os.FileInfo)
+
+	err = filepath.Walk(dirPath,func(path string, info os.FileInfo, err error) error {
+			if info == nil {
+				return err
+			}
+
+			if scanType == 1 {
+				if info.IsDir() {
+					fileList[path] = info
+				}
+			} else if scanType == 2 {
+				if !info.IsDir() {
+					fileList[path] = info
+				}
+			} else {
+				fileList[path] = info
+			}
+
+			return nil
+		})
+
+	return
+}
+
+// 扫描当前目录下文件，不递归扫描
+//扫描类型：scanType。0=全部，1=文件夹，2=文件
+func ScanDir(dirName string, scanType int) []string {
+
+	dirNameSeparator:=dirName
+	if !strings.HasSuffix(dirNameSeparator, string(os.PathSeparator)) {
+		dirNameSeparator+=string(os.PathSeparator)
+	}
+
+	files, err := ioutil.ReadDir(dirName)
+	if err != nil {
+		log.Println(err)
+	}
+	var fileList []string
+	for _, file := range files {
+		if scanType==0 || (scanType == 1 && file.IsDir()) || (scanType == 2 && !file.IsDir()){
+
+			fileList = append(fileList, dirNameSeparator + file.Name())
+		}
+	}
+	return fileList
+}
