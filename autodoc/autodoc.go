@@ -335,6 +335,10 @@ func (this *AutoDoc) responseStringRecursive(t reflect.Type, name string, space 
 		s = fmt.Sprintf("%s%s{\n", space, name)
 	}
 
+	if t.Kind()==reflect.Ptr {
+		t=t.Elem()
+	}
+
 	if t.Kind() != reflect.Struct {
 		return ""
 	}

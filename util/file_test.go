@@ -23,3 +23,7 @@ func TestScanDir(t *testing.T) {
 		fmt.Println(v)
 	}
 }
+
+func TestParseChnFromGolang(t *testing.T) {
+	ParseChnFromGolang("/home/yu/code/ant/util/file.go")
+}

@@ -13,6 +13,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -371,4 +372,37 @@ func ScanDir(dirName string, scanType int) []string {
 		}
 	}
 	return fileList
+}
+
+//从go代码文件中解析出中文
+func ParseChnFromGolang(filePath string) (words []string) {
+	content, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	re := regexp.MustCompile(`"\p{Han}[\p{Han}0-9]+`)
+	words = re.FindAllString(string(content), -1)
+
+	//
+	//for _,v:=range words {
+	//	fmt.Println(v)
+	//}
+	//
+	return
+}
+
+// 判断所给路径是否为文件夹
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// 判断所给路径是否为文件
+func IsFile(path string) bool {
+	return !IsDir(path)
 }

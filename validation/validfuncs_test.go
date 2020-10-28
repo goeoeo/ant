@@ -1,13 +1,12 @@
 package validation
 
 import (
-	"github.com/phpdi/ant"
 	"testing"
 )
 
 func TestMax(t *testing.T) {
 
-	a := ant.StockHsas{}
+	a := StockHsas{}
 	v := New()
 
 	//零值不验证
