@@ -1,8 +1,9 @@
-package util
+package image
 
 import (
 	"fmt"
 	"github.com/nfnt/resize"
+	"github.com/phpdi/ant/util"
 	"image"
 	_ "image/gif"
 	"image/jpeg"
@@ -101,7 +102,7 @@ func (this *ImageAbbreviation) createDir(filePath string) (err error) {
 
 	dir = strings.Join(arr[0:len(arr)-1], "/")
 
-	if ok, err = PathExists(dir); err != nil {
+	if ok, err = util.PathExists(dir); err != nil {
 		return
 	}
 	//今日目录不存在创建
