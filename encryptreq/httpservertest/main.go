@@ -3,11 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/phpdi/ant"
 	"github.com/phpdi/ant/encryptreq"
 	"io/ioutil"
 	"net/http"
 )
+
+type StockParse struct {
+	Id   int    `orm:"column(id);table(rms_parse)" `
+	Code string `orm:"column(code)"` //股票代码
+	Name string `orm:"column(name)"` //股票名称
+}
 
 func main() {
 	http.HandleFunc("/", handle)
@@ -23,7 +28,7 @@ func handle(writer http.ResponseWriter, r *http.Request) {
 	var (
 		request encryptreq.Request
 		resp    encryptreq.Response
-		req     ant.StockParse
+		req     StockParse
 
 		outBody []byte
 	)

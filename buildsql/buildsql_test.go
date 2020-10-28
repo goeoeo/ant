@@ -2,13 +2,12 @@ package buildsql
 
 import (
 	"fmt"
-	"github.com/phpdi/ant"
 	"testing"
 )
 
 //插入
 func TestBuildSql_Insert(t *testing.T) {
-	sql, err := NewModel(ant.StockHsas{Code: "131", OpenToday: 111}).Insert()
+	sql, err := NewModel(StockHsas{Code: "131", OpenToday: 111}).Insert()
 	if err != nil {
 		t.Error(err)
 	}
@@ -17,7 +16,7 @@ func TestBuildSql_Insert(t *testing.T) {
 
 //更新
 func TestBuildSql_Update(t *testing.T) {
-	sql, err := NewModel(ant.StockHsas{Code: "131"}).Where("id", 1).Update()
+	sql, err := NewModel(StockHsas{Code: "131"}).Where("id", 1).Update()
 	if err != nil {
 		t.Error(err)
 	}
@@ -26,7 +25,7 @@ func TestBuildSql_Update(t *testing.T) {
 
 //删除
 func TestBuildSql_Delete(t *testing.T) {
-	sql, err := NewModel(ant.StockHsas{}).Where("id", 1).Delete()
+	sql, err := NewModel(StockHsas{}).Where("id", 1).Delete()
 	if err != nil {
 		t.Error(err)
 	}
@@ -35,7 +34,7 @@ func TestBuildSql_Delete(t *testing.T) {
 
 //查询
 func TestBuildSql_Select(t *testing.T) {
-	sql, err := NewModel(ant.StockHsas{}).Where("id", 1).Select()
+	sql, err := NewModel(StockHsas{}).Where("id", 1).Select()
 	if err != nil {
 		t.Error(err)
 	}
@@ -44,8 +43,8 @@ func TestBuildSql_Select(t *testing.T) {
 
 func TestBuildSql_LeftJoin(t *testing.T) {
 
-	sql, err := NewModel(ant.StockHsas{}, "A").
-		LeftJoin(ant.StockHsas{}, "B", "A.code=B.code").
+	sql, err := NewModel(StockHsas{}, "A").
+		LeftJoin(StockHsas{}, "B", "A.code=B.code").
 		Where("A.id", 1).
 		Select()
 	if err != nil {
@@ -57,8 +56,8 @@ func TestBuildSql_LeftJoin(t *testing.T) {
 
 func TestBuildSql_Field(t *testing.T) {
 
-	sql, err := NewModel(ant.StockHsas{}, "A").
-		LeftJoin(ant.StockHsas{}, "B", "A.code=B.code").
+	sql, err := NewModel(StockHsas{}, "A").
+		LeftJoin(StockHsas{}, "B", "A.code=B.code").
 		Where("A.id", 1).
 		Field("A.id", "A.code", "B.id").
 		Select()
@@ -83,7 +82,7 @@ func TestGetColumnName(t *testing.T) {
 
 func TestBuildSql_GetTableNameFromModel(t *testing.T) {
 
-	tableName, err := GetTableNameFromModel(ant.StockHsas{})
+	tableName, err := GetTableNameFromModel(StockHsas{})
 	if err != nil {
 		t.Error(err)
 	}

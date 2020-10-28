@@ -2,7 +2,6 @@ package encryptreq
 
 import (
 	"fmt"
-	"github.com/phpdi/ant"
 	"math/rand"
 	"testing"
 	"time"
@@ -16,13 +15,13 @@ func init() {
 }
 
 func TestEncryptReq_PostCheckCode(t *testing.T) {
-	req := ant.StockParse{
+	req := StockParse{
 		Id:   2,
 		Code: "aaa",
 		Name: "bbb",
 	}
 
-	ack := ant.StockParse{}
+	ack := StockParse{}
 
 	encryptReq.PostCheckCode("http://localhost:8080/", req, &ack)
 	fmt.Println(ack)

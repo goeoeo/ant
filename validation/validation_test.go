@@ -2,12 +2,11 @@ package validation
 
 import (
 	"fmt"
-	"github.com/phpdi/ant"
 	"testing"
 )
 
 func TestValidation_Require(t *testing.T) {
-	a := ant.StockHsas{}
+	a := StockHsas{}
 
 	v := New()
 
@@ -43,7 +42,7 @@ func TestNewValidation(t *testing.T) {
 }
 
 func TestValidation_SetFailMessages(t *testing.T) {
-	a := ant.StockHsas{Id: 100}
+	a := StockHsas{Id: 100}
 	v := New().SetFailMessages(map[string]string{"Id": "Id 必须到5到20之间"})
 	err := v.Valid(a)
 	if err != nil {
@@ -52,7 +51,7 @@ func TestValidation_SetFailMessages(t *testing.T) {
 }
 
 func TestValidation_Require2(t *testing.T) {
-	a := ant.StockHsas{Id: 100}
+	a := StockHsas{Id: 100}
 	v := New().Require("Code")
 	err := v.Valid(a)
 	if err != nil {

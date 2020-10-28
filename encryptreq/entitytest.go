@@ -1,11 +1,8 @@
-package autodoc
+package encryptreq
 
-import (
-	"encoding/json"
-	"fmt"
-	"testing"
-	"time"
-)
+import "time"
+
+//测试需要的结构体
 
 //股票最新数据模型
 type StockHsas struct {
@@ -32,6 +29,7 @@ type StockParse struct {
 	Code string `orm:"column(code)"` //股票代码
 	Name string `orm:"column(name)"` //股票名称
 }
+
 type User struct {
 	Id         int       `orm:"size(11);column(id);"`
 	UserName   string    `field:"账号" orm:"size(50);column(username)"`                                          //用户名：代理商、代理商员工（手机号登录），管理员、运营商、网吧（账号登录）
@@ -47,29 +45,4 @@ type User struct {
 	CreateTime time.Time `orm:"auto_now_add;type(datetime);column(create_time)"`                               //创建时间
 	UpdateTime time.Time `orm:"auto_now_add;type(datetime);column(update_time)"`                               //更新时间
 
-}
-
-func TestAutoDoc_Do(t *testing.T) {
-	res, err := New(StockParse{}, User{}).Do()
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	fmt.Print(res)
-}
-
-func jsonFmt(obj interface{}) {
-	tmp, _ := json.MarshalIndent(obj, "", "     ")
-	fmt.Println(string(tmp))
-}
-
-func TestIsCapitalFirst(t *testing.T) {
-	IsCapitalFirst("toal")
-}
-
-func TestAutoDoc_ReplaceDoc(t *testing.T) {
-	a := New(nil, nil)
-	a.SetTitle("登录")
-	a.ReplaceDoc("autodoc.md")
 }
