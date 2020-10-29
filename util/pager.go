@@ -1,7 +1,8 @@
 package util
 
 import (
-	"encoding/json"
+	"bytes"
+	"encoding/gob"
 	"errors"
 	"reflect"
 )
@@ -23,7 +24,7 @@ func (this *Pager) Pagination(data interface{}) *Pager {
 	var (
 		resSlice []interface{}
 		err      error
-		content  []byte
+		contentBuffer bytes.Buffer
 	)
 
 	defer func() {
@@ -41,10 +42,18 @@ func (this *Pager) Pagination(data interface{}) *Pager {
 		return this
 	}
 
-	if content, err = json.Marshal(resSlice); err == nil {
-		if err = json.Unmarshal(content, data); err != nil {
-			return this
-		}
+
+	//这里不用json序列化的原因是如果遇到proto结构体 omitempty tag 会导致后面的页字段零值情况使用到第一页数据的非零值
+	//编码
+	enc := gob.NewEncoder(&contentBuffer)
+	if err = enc.Encode(resSlice); err == nil {
+		return this
+	}
+
+	//解码
+	dec := gob.NewDecoder(&contentBuffer)
+	if err = dec.Decode(data); err != nil {
+		return this
 	}
 
 	return this
