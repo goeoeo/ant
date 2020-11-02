@@ -1,9 +1,8 @@
 package util
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
+	"fmt"
 	"reflect"
 )
 
@@ -20,39 +19,9 @@ func (this *Pager) PageEnable() bool {
 }
 
 //切片分页 pageSize=-1 返回全部数据
-func (this *Pager) Pagination(data interface{}) *Pager {
-	var (
-		resSlice []interface{}
-		err      error
-		contentBuffer bytes.Buffer
-	)
-
-	defer func() {
-		if err != nil {
-			this.Error = err
-		}
-	}()
-
-	if resSlice, err = this.toSlice(data); err != nil {
-		return this
-	}
-
-	//不进行分页
-	if !this.PageEnable() {
-		return this
-	}
-
-
-	//这里不用json序列化的原因是如果遇到proto结构体 omitempty tag 会导致后面的页字段零值情况使用到第一页数据的非零值
-	//编码
-	enc := gob.NewEncoder(&contentBuffer)
-	if err = enc.Encode(resSlice); err == nil {
-		return this
-	}
-
-	//解码
-	dec := gob.NewDecoder(&contentBuffer)
-	if err = dec.Decode(data); err != nil {
+func (this *Pager) Pagination(src interface{}) *Pager {
+	if err := this.pagination(src); err != nil {
+		this.Error = fmt.Errorf("分页错误:%s", err)
 		return this
 	}
 
@@ -91,15 +60,15 @@ func (this *Pager) Offset() int {
 }
 
 //slice interface 变数组
-func (this *Pager) toSlice(arr interface{}) (res []interface{}, err error) {
-	v := reflect.ValueOf(arr)
-	if v.Kind() != reflect.Ptr {
-		return []interface{}{}, errors.New("分页源数据必须为切片指针")
+func (this *Pager) pagination(arr interface{}) (err error) {
+	ve := reflect.ValueOf(arr)
+	if ve.Kind() != reflect.Ptr {
+		return errors.New("分页源数据必须为切片指针")
 	}
 
-	ve := reflect.ValueOf(arr).Elem()
+	ve = ve.Elem()
 	if ve.Kind() != reflect.Slice {
-		return []interface{}{}, errors.New("分页源数据必须为切片指针.")
+		return errors.New("分页源数据必须为切片指针.")
 	}
 
 	//数据总量
@@ -108,8 +77,6 @@ func (this *Pager) toSlice(arr interface{}) (res []interface{}, err error) {
 	if !this.PageEnable() {
 		return
 	}
-
-	res = []interface{}{}
 
 	limit := this.Limit()
 	offset := this.Offset()
@@ -120,9 +87,10 @@ func (this *Pager) toSlice(arr interface{}) (res []interface{}, err error) {
 			break
 		}
 
-		res = append(res, ve.Index(start+offset).Interface())
+		ve.Index(start).Set(ve.Index(start + offset))
 		start++
 	}
+	ve.SetLen(start)
 
 	return
 }

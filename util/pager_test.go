@@ -14,13 +14,13 @@ func TestPager_Pagination(t *testing.T) {
 	total := int64(0)
 	users := []User{}
 
-	for i := 0; i <= 100; i++ {
+	for i := 0; i < 100; i++ {
 		users = append(users, User{i, i})
 	}
 
 	page := &Pager{
 		Page:     2,
-		PageSize: 50,
+		PageSize: 10,
 	}
 
 	if err := page.Pagination(&users).Total(&total).Error; err != nil {
@@ -30,8 +30,8 @@ func TestPager_Pagination(t *testing.T) {
 
 	fmt.Println("total:", total)
 	fmt.Println("users:", len(users))
-	if len(users) > 0 {
-		fmt.Println(users[0].Id)
+	for _, v := range users {
+		fmt.Println("id:", v.Id)
 	}
 
 }
