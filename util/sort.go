@@ -137,26 +137,6 @@ func inArray(item string, items []string) bool {
 	return false
 }
 
-//slice interface 变数组
-func toSlice(arr interface{}) ([]reflect.Value, error) {
-	v := reflect.ValueOf(arr)
-	if v.Kind() != reflect.Ptr {
-		return nil, errors.New("排序源数据必须为切片指针")
-	}
-
-	ve := reflect.ValueOf(arr).Elem()
-	if ve.Kind() != reflect.Slice {
-		return nil, errors.New("排序源数据必须为切片指针.")
-	}
-
-	l := ve.Len()
-	ret := make([]reflect.Value, l)
-	for i := 0; i < l; i++ {
-		ret[i] = ve.Index(i)
-	}
-	return ret, nil
-}
-
 //a<b 判定
 func lessValue(a reflect.Value, b reflect.Value) bool {
 
