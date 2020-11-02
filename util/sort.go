@@ -117,7 +117,7 @@ func parseField(sortFields string) (sortFieldsSlice []sortField, err error) {
 		}
 		//升降序指令，统一转小写
 		tmp[1] = strings.ToLower(tmp[1])
-		if !inArray(tmp[1], []string{aes, desc}) {
+		if tmp[1] != aes && tmp[1] != desc {
 			return nil, errors.New(fmt.Sprintf("排序字段解析错误,排序指令只支持:%s,%s", aes, desc))
 		}
 
@@ -126,15 +126,6 @@ func parseField(sortFields string) (sortFieldsSlice []sortField, err error) {
 
 	return
 
-}
-
-func inArray(item string, items []string) bool {
-	for _, v := range items {
-		if v == item {
-			return true
-		}
-	}
-	return false
 }
 
 //a<b 判定
