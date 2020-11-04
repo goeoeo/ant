@@ -388,7 +388,6 @@ func ParseChnFromGolang(filePath string) (words []string) {
 
 	for _, v := range tmp {
 		if rechn.Match([]byte(v)) &&
-			!strings.Contains(v, "%") &&
 			!strings.Contains(v, "=") &&
 			!strings.Contains(v, "/") &&
 			!strings.Contains(v, "->") {

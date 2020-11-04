@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/bregydoc/gtranslate"
 	"github.com/phpdi/ant/util"
+	"hash/crc32"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -65,6 +66,9 @@ func (this *TranFileFromCode) AppendRun() *TranFileFromCode {
 			newWord = append(newWord, v)
 		}
 	}
+
+	fmt.Println("原词汇数量:", len(oldword))
+	fmt.Println("新增词汇数量:", len(newWord))
 
 	this.writeFile(append(oldword, newWord...), this.targetFile)
 
@@ -231,7 +235,15 @@ func (this *TranFileFromCode) getTargetFileWords(filePath string) (words [][2]st
 }
 
 //生成中英文文件
-func (this *TranFileFromCode) MakeFile() {
+func (this *TranFileFromCode) MakeFile(enFile string, zhFile string) {
+	if enFile == "" {
+		enFile = "locale_us-EN.lang"
+	}
+
+	if zhFile == "" {
+		zhFile = "locale_zh-CN.lang"
+	}
+
 	words := this.getTargetFileWords(this.targetFile)
 	var (
 		enWords [][2]string
@@ -239,14 +251,19 @@ func (this *TranFileFromCode) MakeFile() {
 	)
 
 	for _, v := range words {
-		key := Md5(v[1])
+		key := Crc(v[1])
 		enWords = append(enWords, [2]string{key, strings.ToLower(v[0])})
 		zhWords = append(zhWords, [2]string{key, v[1]})
 	}
 
-	this.writeFile(enWords, "locale_us-EN.lang")
-	this.writeFile(zhWords, "locale_zh-CN.lang")
+	this.writeFile(enWords, enFile)
+	this.writeFile(zhWords, zhFile)
 
+}
+
+func Crc(name string) string {
+	n := crc32.ChecksumIEEE([]byte(name))
+	return fmt.Sprintf("%08X", n)
 }
 
 func (this *TranFileFromCode) writeFile(source [][2]string, fileName string) {
