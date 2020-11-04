@@ -192,7 +192,7 @@ func CheckFile(fileHeader *multipart.FileHeader, size int64 /*支持的大小，
 
 	//大小检查
 	if fileHeader.Size > size*1000 {
-		return fmt.Errorf("文件过大:%d",fileHeader.Size)
+		return fmt.Errorf("文件过大:%d", fileHeader.Size)
 	}
 
 	return nil
@@ -262,8 +262,6 @@ func FileSha1(file io.Reader) (string, error) {
 	return hex.EncodeToString(_sha1.Sum(nil)), nil
 }
 
-
-
 //根据日期转移文件
 func MoveFileWithDate(filePath string, dir string, randName bool) (newPath string, err error) {
 	var (
@@ -322,31 +320,30 @@ func MoveFileWithDate(filePath string, dir string, randName bool) (newPath strin
 
 }
 
-
 //扫描路径：dirPath
 //扫描类型：scanType。0=全部，1=文件夹，2=文件
 func ScanPath(dirPath string, scanType int) (fileList map[string]os.FileInfo, err error) {
 	fileList = make(map[string]os.FileInfo)
 
-	err = filepath.Walk(dirPath,func(path string, info os.FileInfo, err error) error {
-			if info == nil {
-				return err
-			}
+	err = filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if info == nil {
+			return err
+		}
 
-			if scanType == 1 {
-				if info.IsDir() {
-					fileList[path] = info
-				}
-			} else if scanType == 2 {
-				if !info.IsDir() {
-					fileList[path] = info
-				}
-			} else {
+		if scanType == 1 {
+			if info.IsDir() {
 				fileList[path] = info
 			}
+		} else if scanType == 2 {
+			if !info.IsDir() {
+				fileList[path] = info
+			}
+		} else {
+			fileList[path] = info
+		}
 
-			return nil
-		})
+		return nil
+	})
 
 	return
 }
@@ -355,9 +352,9 @@ func ScanPath(dirPath string, scanType int) (fileList map[string]os.FileInfo, er
 //扫描类型：scanType。0=全部，1=文件夹，2=文件
 func ScanDir(dirName string, scanType int) []string {
 
-	dirNameSeparator:=dirName
+	dirNameSeparator := dirName
 	if !strings.HasSuffix(dirNameSeparator, string(os.PathSeparator)) {
-		dirNameSeparator+=string(os.PathSeparator)
+		dirNameSeparator += string(os.PathSeparator)
 	}
 
 	files, err := ioutil.ReadDir(dirName)
@@ -366,9 +363,9 @@ func ScanDir(dirName string, scanType int) []string {
 	}
 	var fileList []string
 	for _, file := range files {
-		if scanType==0 || (scanType == 1 && file.IsDir()) || (scanType == 2 && !file.IsDir()){
+		if scanType == 0 || (scanType == 1 && file.IsDir()) || (scanType == 2 && !file.IsDir()) {
 
-			fileList = append(fileList, dirNameSeparator + file.Name())
+			fileList = append(fileList, dirNameSeparator+file.Name())
 		}
 	}
 	return fileList
@@ -376,15 +373,28 @@ func ScanDir(dirName string, scanType int) []string {
 
 //从go代码文件中解析出中文
 func ParseChnFromGolang(filePath string) (words []string) {
+	var tmp []string
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	re := regexp.MustCompile(`"\p{Han}[\p{Han}0-9]+`)
-	words = re.FindAllString(string(content), -1)
+	re := regexp.MustCompile(`"(?U)(.)+"`)
+	//re := regexp.MustCompile(`"\p{Han}[\p{Han}0-9a-zA-Z]+`)
+	tmp = re.FindAllString(string(content), -1)
 
+	rechn := regexp.MustCompile(`\p{Han}+`)
+
+	for _, v := range tmp {
+		if rechn.Match([]byte(v)) &&
+			!strings.Contains(v, "%") &&
+			!strings.Contains(v, "=") &&
+			!strings.Contains(v, "/") &&
+			!strings.Contains(v, "->") {
+			words = append(words, v)
+		}
+	}
 	//
 	//for _,v:=range words {
 	//	fmt.Println(v)
