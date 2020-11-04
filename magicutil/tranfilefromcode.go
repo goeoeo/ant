@@ -39,7 +39,7 @@ func (this *TranFileFromCode) SetTargetFile(file string) *TranFileFromCode {
 }
 
 //执行翻译,追加方式翻译
-func (this *TranFileFromCode) AppendRun() {
+func (this *TranFileFromCode) AppendRun() *TranFileFromCode {
 	var (
 		oldword [][2]string
 		newWord [][2]string
@@ -67,13 +67,17 @@ func (this *TranFileFromCode) AppendRun() {
 	}
 
 	this.writeFile(append(oldword, newWord...), this.targetFile)
+
+	return this
 }
 
 //执行翻译
-func (this *TranFileFromCode) Run() {
+func (this *TranFileFromCode) Run() *TranFileFromCode {
 	sourceWords := this.GetKvs()
 	this.writeFile(sourceWords, this.targetFile)
 	fmt.Println("翻译完成.")
+
+	return this
 }
 
 //扫描文件
@@ -236,7 +240,7 @@ func (this *TranFileFromCode) MakeFile() {
 
 	for _, v := range words {
 		key := Md5(v[1])
-		enWords = append(enWords, [2]string{key, v[0]})
+		enWords = append(enWords, [2]string{key, strings.ToLower(v[0])})
 		zhWords = append(zhWords, [2]string{key, v[1]})
 	}
 
