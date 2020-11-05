@@ -22,7 +22,7 @@ func TestPager_Pagination(t *testing.T) {
 
 	page := &Pager{
 		Page:     2,
-		PageSize: 10,
+		PageSize: 1000,
 	}
 
 	if err := page.Pagination(&users).Total(&total).Error; err != nil {

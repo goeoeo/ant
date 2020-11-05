@@ -8,10 +8,11 @@ import (
 )
 
 type Pager struct {
-	Page     int   //当前页
-	PageSize int   //页大小 ,页大小 小于 0 返回所有数据
-	Error    error `json:"-"`
-	total    int64 `json:"-"` //总量
+	Page       int   //当前页
+	PageSize   int   //页大小 ,页大小 小于 0 返回所有数据
+	Error      error `json:"-"`
+	total      int64 `json:"-"` //总量
+	strictMode bool  //严格模式，会返回真实计算出的偏移量。如果偏移量不合法，那么原切片会被置空
 }
 
 //是否进行分页
@@ -19,12 +20,14 @@ func (this *Pager) PageEnable() bool {
 	return this.PageSize > 0 && this.Page > 0
 }
 
+//开启严格模式
+func (this *Pager) StrictMode() *Pager {
+	this.strictMode = true
+	return this
+}
+
 //切片分页 pageSize=-1 返回全部数据
 func (this *Pager) Pagination(src interface{}) *Pager {
-	if !this.PageEnable() {
-		return this
-	}
-
 	if err := this.pagination(src); err != nil {
 		this.Error = fmt.Errorf("分页错误:%s", err)
 		return this
@@ -51,7 +54,6 @@ func (this *Pager) Limit() int {
 
 //偏移量
 func (this *Pager) Offset() int {
-
 	if !this.PageEnable() {
 		return 0
 	}
@@ -84,7 +86,13 @@ func (this *Pager) pagination(arr interface{}) (err error) {
 	this.total = int64(ve.Len())
 	//偏移量
 	offset := this.Offset()
-	if offset >= int(this.total) {
+
+	//检查偏移量是否越界
+	if !this.PageEnable() || offset >= int(this.total) {
+		if this.strictMode {
+			//严格模式，切片置空
+			ve.SetLen(0)
+		}
 		return
 	}
 
@@ -102,5 +110,6 @@ func (this *Pager) pagination(arr interface{}) (err error) {
 		limit = int(this.total) - offset
 	}
 	sliHeader.Len = limit
+
 	return
 }
