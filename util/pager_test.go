@@ -2,7 +2,9 @@ package util
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
+	"unsafe"
 )
 
 func TestPager_Pagination(t *testing.T) {
@@ -33,5 +35,40 @@ func TestPager_Pagination(t *testing.T) {
 	for _, v := range users {
 		fmt.Println("id:", v.Id)
 	}
+
+}
+
+func TestPager_A(t *testing.T) {
+	type User struct {
+		Id   int
+		Name int
+	}
+	users := []User{}
+	for i := 0; i < 10; i++ {
+
+		item := User{
+			Id:   i,
+			Name: i,
+		}
+
+		users = append(users, item)
+	}
+
+	for k := range users {
+		fmt.Println(">>>", unsafe.Sizeof(users[k]))
+	}
+	a(&users)
+
+}
+
+type User struct {
+	Id   int
+	Name string
+}
+
+func a(obj interface{}) {
+	v := reflect.TypeOf(obj).Elem().Elem()
+
+	fmt.Println(v.Size())
 
 }

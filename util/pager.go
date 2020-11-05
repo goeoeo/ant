@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"unsafe"
 )
 
 type Pager struct {
@@ -20,6 +21,10 @@ func (this *Pager) PageEnable() bool {
 
 //切片分页 pageSize=-1 返回全部数据
 func (this *Pager) Pagination(src interface{}) *Pager {
+	if !this.PageEnable() {
+		return this
+	}
+
 	if err := this.pagination(src); err != nil {
 		this.Error = fmt.Errorf("分页错误:%s", err)
 		return this
@@ -61,36 +66,41 @@ func (this *Pager) Offset() int {
 
 //slice interface 变数组
 func (this *Pager) pagination(arr interface{}) (err error) {
-	ve := reflect.ValueOf(arr)
-	if ve.Kind() != reflect.Ptr {
+	var (
+		v  reflect.Value
+		ve reflect.Value
+	)
+	v = reflect.ValueOf(arr)
+	if v.Kind() != reflect.Ptr {
 		return errors.New("分页源数据必须为切片指针")
 	}
 
-	ve = ve.Elem()
+	ve = v.Elem()
 	if ve.Kind() != reflect.Slice {
 		return errors.New("分页源数据必须为切片指针.")
 	}
 
 	//数据总量
 	this.total = int64(ve.Len())
-
-	if !this.PageEnable() {
+	//偏移量
+	offset := this.Offset()
+	if offset >= int(this.total) {
 		return
 	}
 
+	sliHeader := (*reflect.SliceHeader)(unsafe.Pointer(v.Pointer()))
+
+	//取切片元素大小
+	sizeItem := reflect.TypeOf(arr).Elem().Elem().Size()
+
+	//移动指针
+	sliHeader.Data += uintptr(offset) * sizeItem
+
 	limit := this.Limit()
-	offset := this.Offset()
-	start := 0
-
-	for {
-		if start >= limit || start+offset >= int(this.total) {
-			break
-		}
-
-		ve.Index(start).Set(ve.Index(start + offset))
-		start++
+	//防止越界
+	if int(this.total)-offset < limit {
+		limit = int(this.total) - offset
 	}
-	ve.SetLen(start)
-
+	sliHeader.Len = limit
 	return
 }
