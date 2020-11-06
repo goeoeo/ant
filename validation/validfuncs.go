@@ -90,6 +90,13 @@ func NewValidationConfig() *ValidationConfig {
 	return this
 }
 
+//设置tag名
+func (this *ValidationConfig) SetTag(structTagField, structFieldName string) *ValidationConfig {
+	this.structTagField = structTagField
+	this.structFieldName = structFieldName
+	return this
+}
+
 //注册函数
 func (this *ValidationConfig) RegisterFun(funcName string, validFunc ValidFun, failMsg ...string) *ValidationConfig {
 	if len(this.validFuns) == 0 {

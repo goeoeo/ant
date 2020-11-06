@@ -1,7 +1,8 @@
-package util
+package test
 
 import (
 	"fmt"
+	"github.com/phpdi/ant/util"
 	"testing"
 )
 
@@ -29,7 +30,7 @@ func Test_SortSlice(t *testing.T) {
 	}
 
 	fmt.Println("__________________________")
-	if err := SortSlice(&clients, "Admin aes,Ip desc"); err != nil {
+	if err := util.SortSlice(&clients, "Admin aes,Ip desc"); err != nil {
 		t.Error(err)
 	}
 

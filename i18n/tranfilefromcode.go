@@ -1,4 +1,4 @@
-package magicutil
+package i18n
 
 import (
 	"crypto/md5"
@@ -19,9 +19,10 @@ type TranFileFromCode struct {
 	uniqueWords    []string //扫描出的词汇组合
 	outUniqueWords [][2]string
 
-	filePaths []string //扫描目录
+	filePaths  []string //扫描目录
+	targetFile string   //目标文件
 
-	targetFile string //目标文件
+	scanCodeParseFun func(filePath string) []string //扫描文件，翻译部分的函数
 }
 
 func NewTranFileFromCode(scanPaths ...string) *TranFileFromCode {
@@ -168,7 +169,7 @@ func (this *TranFileFromCode) GetKvs() [][2]string {
 	}
 
 	//进度条
-	var bar ProgressBar
+	var bar util.ProgressBar
 	bar.NewOption(0, int64(len(this.uniqueWords)))
 	fmt.Println("正在翻译...")
 	for k, word := range this.uniqueWords {

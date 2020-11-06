@@ -19,18 +19,22 @@ type (
 		priorityFields []string          //优先验证字段，可通过此属性，调整字段验证顺序
 		fieldTag       map[string]string //手动设置验证规则
 
-		failMessages map[string]string //字段验证失败的提示信息,当没有设置字段信息时，使用拼接的方式进行错误显示
+		failMessages map[string] /*字段*/ string /*自定义的错误消息*/ //字段验证失败的提示信息,当没有设置字段信息时，使用拼接的方式进行错误显示
+
+		tranFunc func(format string, params ...interface{}) string //多语言环境
 	}
 )
 
 //new
 func New() *Validation {
 	this := &Validation{
-		Config: DefultValidationConfig,
+		Config:       DefultValidationConfig,
+		failMessages: make(map[string]string),
+		fieldTag:     make(map[string]string),
+		tranFunc: func(s string, params ...interface{}) string {
+			return fmt.Sprintf(s, params)
+		},
 	}
-
-	this.failMessages = make(map[string]string)
-	this.fieldTag = make(map[string]string)
 
 	return this
 }
@@ -48,10 +52,9 @@ func (this *Validation) SetFailMessages(failMessages map[string]string) *Validat
 //获取字段对应的错误信息
 func (this *Validation) getError(field string, name string, msg string) error {
 
-
 	//自定义的错误提示优先
 	if msg, ok := this.failMessages[field]; ok {
-		return errors.New(msg)
+		return errors.New(this.tranFunc(msg))
 	}
 
 	//使用拼接的方式提示错误
@@ -63,7 +66,13 @@ func (this *Validation) getError(field string, name string, msg string) error {
 		name = nameArr[0]
 	}
 
-	return errors.New(name + msg)
+	return errors.New(this.tranFunc(name) + msg)
+}
+
+//设置翻译回调函数
+func (this *Validation) SetTrFun(f func(s string, params ...interface{}) string) *Validation {
+	this.tranFunc = f
+	return this
 }
 
 //手动设置FieldTag
@@ -173,9 +182,13 @@ func (this *Validation) validField(field string, fieldType reflect.StructField, 
 							formatParams = append(formatParams, v1)
 
 						}
-						return this.getError(field, name, fmt.Sprintf(msg, formatParams...))
+
+						if strings.Contains(msg, "%v") {
+							msg = this.tranFunc(msg, formatParams)
+						}
+						return this.getError(field, name, msg)
 					} else {
-						return this.getError(field, name, "验证不通过")
+						return this.getError(field, name, this.tranFunc("验证不通过"))
 					}
 
 				}

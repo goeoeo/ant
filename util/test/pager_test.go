@@ -1,7 +1,8 @@
-package util
+package test
 
 import (
 	"fmt"
+	"github.com/phpdi/ant/util"
 	"reflect"
 	"testing"
 	"unsafe"
@@ -20,7 +21,7 @@ func TestPager_Pagination(t *testing.T) {
 		users = append(users, User{i, i})
 	}
 
-	page := &Pager{
+	page := &util.Pager{
 		Page:     2,
 		PageSize: 1000,
 	}

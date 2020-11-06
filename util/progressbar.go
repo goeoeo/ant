@@ -1,4 +1,4 @@
-package magicutil
+package util
 
 import "fmt"
 
