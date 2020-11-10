@@ -71,7 +71,11 @@ func (i *I18n) initLang(fileDir string) {
 //设置消息
 func (i *I18n) SetMessage(langType string, file string) {
 	words := i.getWordsFromFile(file)
+	if _,ok:=i.langData[langType];!ok {
+		i.langData[langType]=make(map[string]string)
+	}
 	for _, v := range words {
+
 		i.langData[langType][v[0]] = v[1]
 	}
 }
