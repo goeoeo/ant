@@ -7,7 +7,7 @@ import (
 )
 
 func TestTranFileFromCode_Run(t *testing.T) {
-	i18n.NewTranFileFromCode("locale_zh-CN.lang", "/home/yu/code/yungengxin2019/lwyapi/controllers").Run()
+	i18n.NewTranFileFromCode("/home/yu/code/yungengxin2019/lwyapi/controllers/client.go").Run()
 }
 
 func TestCrc(t *testing.T) {
