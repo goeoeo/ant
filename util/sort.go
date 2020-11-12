@@ -15,8 +15,8 @@ type sortField struct {
 }
 
 const (
-	aes  = "aes"
-	desc = "desc"
+	Aes  = "aes"
+	Desc = "desc"
 )
 
 //多字段排序
@@ -68,19 +68,26 @@ func SortSlice(slicePtr interface{}, sortFields string /* Field Aes */) (err err
 	sort.Slice(arrSlice, func(i, j int) bool {
 
 		for _, v := range sortFieldSlice {
-			if v.val != aes && v.val != desc {
+			if v.val != Aes && v.val != Desc {
 				continue
 			}
 
-			a := arrSlice[i].FieldByName(v.field)
-			b := arrSlice[j].FieldByName(v.field)
+			aPtr := fieldValue(arrSlice[i], v.field)
+			bPtr := fieldValue(arrSlice[j], v.field)
+
+			if aPtr == nil || bPtr == nil {
+				continue
+			}
+
+			a := *aPtr
+			b := *bPtr
 
 			//当前排序字段值相等跳过
 			if reflect.DeepEqual(a.Interface(), b.Interface()) {
 				continue
 			}
 
-			if v.val == aes {
+			if v.val == Aes {
 				//升序
 				return lessValue(a, b)
 			} else {
@@ -103,6 +110,19 @@ func SortSlice(slicePtr interface{}, sortFields string /* Field Aes */) (err err
 
 }
 
+//点语法取字段值
+func fieldValue(fieldValue reflect.Value, field string) *reflect.Value {
+	arr := strings.Split(field, ".")
+	for _, v := range arr {
+
+		fieldValue = fieldValue.FieldByName(v)
+		if !fieldValue.IsValid() {
+			return nil
+		}
+	}
+	return &fieldValue
+}
+
 //解析排序字段
 func parseField(sortFields string) (sortFieldsSlice []sortField, err error) {
 	var (
@@ -117,8 +137,8 @@ func parseField(sortFields string) (sortFieldsSlice []sortField, err error) {
 		}
 		//升降序指令，统一转小写
 		tmp[1] = strings.ToLower(tmp[1])
-		if tmp[1] != aes && tmp[1] != desc {
-			return nil, errors.New(fmt.Sprintf("排序字段解析错误,排序指令只支持:%s,%s", aes, desc))
+		if tmp[1] != Aes && tmp[1] != Desc {
+			return nil, errors.New(fmt.Sprintf("排序字段解析错误,排序指令只支持:%s,%s", Aes, Desc))
 		}
 
 		sortFieldsSlice = append(sortFieldsSlice, sortField{field: tmp[0], val: tmp[1]})

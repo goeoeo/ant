@@ -19,27 +19,3 @@ func TestKeep0Add(t *testing.T) {
 		t.Error("fail")
 	}
 }
-
-func Test_snakeString(t *testing.T) {
-	type args struct {
-		s string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "ls",
-			args: args{s: "XxYy"},
-			want: "xx_yy",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := util.snakeString(tt.args.s); got != tt.want {
-				t.Errorf("snakeString() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
