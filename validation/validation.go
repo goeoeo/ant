@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -66,6 +67,11 @@ func (this *Validation) getError(field string, name string, msg string) error {
 		name = nameArr[0]
 	}
 
+	reg := regexp.MustCompile(`\p{Han}+`)
+	//非汉字加空格
+	if !reg.Match([]byte(msg)) {
+		msg = " " + msg
+	}
 	return errors.New(this.tranFunc(name) + msg)
 }
 
@@ -162,7 +168,7 @@ func (this *Validation) validField(field string, fieldType reflect.StructField, 
 	//零值验证
 	if this.IsEmpty(fieldValue.Interface()) {
 		if this.inArray(field, this.requireFields) {
-			return this.getError(field, fieldType.Tag.Get(this.Config.structFieldName), this.Config.messageTmpls["Required"])
+			return this.getError(field, fieldType.Tag.Get(this.Config.structFieldName), this.tranFunc(this.Config.messageTmpls["Required"]))
 		}
 		return nil
 	}
@@ -182,10 +188,7 @@ func (this *Validation) validField(field string, fieldType reflect.StructField, 
 							formatParams = append(formatParams, v1)
 
 						}
-
-						if strings.Contains(msg, "%v") {
-							msg = this.tranFunc(msg, formatParams)
-						}
+						msg = this.tranFunc(msg, formatParams)
 						return this.getError(field, name, msg)
 					} else {
 						return this.getError(field, name, this.tranFunc("验证不通过"))

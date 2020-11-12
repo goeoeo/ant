@@ -61,7 +61,9 @@ func (i *I18n) initLang(fileDir string) {
 	for file := range files {
 		if langType := parseLangType(file); langType != "" {
 			if langType == Zh_CN {
-				log.Println(i.initChnMap(file))
+				if err := i.initChnMap(file); err != nil {
+					log.Println(err)
+				}
 			}
 			i.SetMessage(langType, file)
 		}
@@ -71,8 +73,8 @@ func (i *I18n) initLang(fileDir string) {
 //设置消息
 func (i *I18n) SetMessage(langType string, file string) {
 	words := i.getWordsFromFile(file)
-	if _,ok:=i.langData[langType];!ok {
-		i.langData[langType]=make(map[string]string)
+	if _, ok := i.langData[langType]; !ok {
+		i.langData[langType] = make(map[string]string)
 	}
 	for _, v := range words {
 
