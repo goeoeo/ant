@@ -9,22 +9,12 @@ import (
 	"time"
 )
 
-type sortField struct {
-	field string //排序字段
-	val   string //aes=升序，desc=降序
-}
-
-const (
-	Aes  = "aes"
-	Desc = "desc"
-)
-
 //多字段排序
 //SliceSort([]User ,"Name desc,Id aes"})
-func SortSlice(slicePtr interface{}, sortFields string /* Field Aes */) (err error) {
+func SortSlice(slicePtr interface{}, sortFields string /* Field "aes" */) (err error) {
 
 	var (
-		sortFieldSlice   []sortField
+		sortFieldSlice   [][2]string /*field,order*/
 		arrSlice         []reflect.Value
 		slicePtrValue    reflect.Value
 		newSlicePtrValue reflect.Value
@@ -68,12 +58,12 @@ func SortSlice(slicePtr interface{}, sortFields string /* Field Aes */) (err err
 	sort.Slice(arrSlice, func(i, j int) bool {
 
 		for _, v := range sortFieldSlice {
-			if v.val != Aes && v.val != Desc {
+			if v[1] != "aes" && v[1] != "desc" {
 				continue
 			}
 
-			aPtr := fieldValue(arrSlice[i], v.field)
-			bPtr := fieldValue(arrSlice[j], v.field)
+			aPtr := fieldValue(arrSlice[i], v[0])
+			bPtr := fieldValue(arrSlice[j], v[0])
 
 			if aPtr == nil || bPtr == nil {
 				continue
@@ -87,7 +77,7 @@ func SortSlice(slicePtr interface{}, sortFields string /* Field Aes */) (err err
 				continue
 			}
 
-			if v.val == Aes {
+			if v[1] == "aes" {
 				//升序
 				return lessValue(a, b)
 			} else {
@@ -124,7 +114,7 @@ func fieldValue(fieldValue reflect.Value, field string) *reflect.Value {
 }
 
 //解析排序字段
-func parseField(sortFields string) (sortFieldsSlice []sortField, err error) {
+func parseField(sortFields string) (sortFieldsSlice [][2]string, err error) {
 	var (
 		sortFieldsArr []string
 	)
@@ -137,11 +127,11 @@ func parseField(sortFields string) (sortFieldsSlice []sortField, err error) {
 		}
 		//升降序指令，统一转小写
 		tmp[1] = strings.ToLower(tmp[1])
-		if tmp[1] != Aes && tmp[1] != Desc {
-			return nil, errors.New(fmt.Sprintf("排序字段解析错误,排序指令只支持:%s,%s", Aes, Desc))
+		if tmp[1] != "aes" && tmp[1] != "desc" {
+			return nil, errors.New(fmt.Sprintf("排序字段解析错误,排序指令只支持:%s,%s", "aes", "desc"))
 		}
 
-		sortFieldsSlice = append(sortFieldsSlice, sortField{field: tmp[0], val: tmp[1]})
+		sortFieldsSlice = append(sortFieldsSlice, [2]string{tmp[0], tmp[1]})
 	}
 
 	return
