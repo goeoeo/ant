@@ -1,4 +1,4 @@
-package validation
+package test
 
 import "time"
 
@@ -22,10 +22,11 @@ type StockHsas struct {
 	HandTurnoverRate float64 `orm:"column(hand_turnover_rate)"` //换手率
 	Diff             float64 `orm:"column(diff)"`               //diff
 	Dea              float64 `orm:"column(dea)"`                //dea
+	Sp               StockParse
 }
 
 type StockParse struct {
-	Id   int    `orm:"column(id);table(rms_parse)" `
+	Id   int    `field:"分析id"orm:"column(id);table(rms_parse)" valid:"Max(20);Min(5)"`
 	Code string `orm:"column(code)"` //股票代码
 	Name string `orm:"column(name)"` //股票名称
 }

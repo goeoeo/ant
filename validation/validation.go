@@ -2,39 +2,29 @@ package validation
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
-	"time"
 )
 
 type (
 
 	//数据验证器,用于验证结构体字段内容是否合法
 	Validation struct {
-		Config      *ValidationConfig
-		validateOne bool //只验证一个字段
+		Config *ValidationConfig
 
-		requireFields  []string          //存放非零值字段
-		priorityFields []string          //优先验证字段，可通过此属性，调整字段验证顺序
-		fieldTag       map[string]string //手动设置验证规则
-
-		failMessages map[string] /*字段*/ string /*自定义的错误消息*/ //字段验证失败的提示信息,当没有设置字段信息时，使用拼接的方式进行错误显示
-
-		tranFunc func(format string, params ...interface{}) string //多语言环境
+		requireFields []string                  //存放非零值字段
+		fieldTag      map[string]string         //手动设置验证规则
+		failMessages  map[string] /*字段*/ string /*自定义的错误消息*/ //字段验证失败的提示信息,当没有设置字段信息时，使用拼接的方式进行错误显示
 	}
 )
 
 //new
-func New() *Validation {
+func NewValidation(config *ValidationConfig) *Validation {
 	this := &Validation{
-		Config:       DefultValidationConfig,
+		Config:       config,
 		failMessages: make(map[string]string),
 		fieldTag:     make(map[string]string),
-		tranFunc: func(s string, params ...interface{}) string {
-			return fmt.Sprintf(s, params)
-		},
 	}
 
 	return this
@@ -55,7 +45,7 @@ func (this *Validation) getError(field string, name string, msg string) error {
 
 	//自定义的错误提示优先
 	if msg, ok := this.failMessages[field]; ok {
-		return errors.New(this.tranFunc(msg))
+		return errors.New(this.Config.TranFunc(msg))
 	}
 
 	//使用拼接的方式提示错误
@@ -72,12 +62,12 @@ func (this *Validation) getError(field string, name string, msg string) error {
 	if !reg.Match([]byte(msg)) {
 		msg = " " + msg
 	}
-	return errors.New(this.tranFunc(name) + msg)
+	return errors.New(this.Config.TranFunc(name) + msg)
 }
 
 //设置翻译回调函数
 func (this *Validation) SetTrFun(f func(s string, params ...interface{}) string) *Validation {
-	this.tranFunc = f
+	this.Config.TranFunc = f
 	return this
 }
 
@@ -94,106 +84,84 @@ func (this *Validation) Require(fields ...string) *Validation {
 	return this
 }
 
-//设置优先验证字段，可通过此方法调整字段验证顺序
-func (this *Validation) Priority(fields ...string) *Validation {
-	this.priorityFields = fields
-	return this
-}
-
 //结构体验证遇到一个验证不通过就会退出
 func (this *Validation) Valid(obj interface{}) error {
-	this.validateOne = true
-	res := this.ValidAll(obj)
+	objT := reflect.TypeOf(obj)
+	objV := reflect.ValueOf(obj)
 
-	for _, v := range res {
-		return v
+	if objT.Kind() == reflect.Ptr {
+		objT = objT.Elem()
+	}
+
+	if objT.Kind() != reflect.Struct {
+		return errors.New(this.Config.TranFunc("the verification object can only be a structure or a structure pointer"))
+	}
+
+	l := objT.NumField()
+	for i := 0; i < l; i++ {
+		if err := this.validStructField("", objT.Field(i), objV.Field(i)); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-//会验证所有的字段
-func (this *Validation) ValidAll(obj interface{}) map[string]error {
+//验证结构体字段
+func (this *Validation) validStructField(parentFiledName string, structFiled reflect.StructField, rv reflect.Value) error {
 
-	res := make(map[string]error)
-
-	objT, objV, err := this.GetStructTV(obj)
-	if err != nil {
-		return res
+	//指针处理
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
 	}
 
-	//设置验证结构体
-	for i := 0; i < objT.NumField(); i++ {
-		field := objT.Field(i).Name
-		if this.inArray(field, this.priorityFields) {
-			continue
-		}
-		this.priorityFields = append(this.priorityFields, field)
+	if parentFiledName != "" {
+		parentFiledName += "." + structFiled.Name
+	} else {
+		parentFiledName = structFiled.Name
 	}
+	switch rv.Kind() {
+	case reflect.Struct:
+		l := rv.NumField()
+		for i := 0; i < l; i++ {
 
-	//优先字段,验证
-	for _, v := range this.priorityFields {
-		//字段类型
-		fieldType, ok := objT.FieldByName(v)
-		if !ok {
-			continue
-		}
-
-		//字段值
-		fieldValue := objV.FieldByName(v)
-
-		if fieldTag, ok := this.fieldTag[v]; ok {
-			fieldType.Tag = reflect.StructTag(fieldTag)
-		}
-
-		//执行此字段的相应验证规则
-		err := this.validField(v, fieldType, fieldValue)
-
-		if err != nil {
-			res[v] = err
-
-			//只验证一个字段
-			if this.validateOne {
-				break
+			if err := this.validStructField(parentFiledName, rv.Type().Field(i), rv.Field(i)); err != nil {
+				return err
 			}
 		}
+		return nil
+
+	case reflect.Invalid, reflect.Complex64, reflect.Complex128, reflect.Chan, reflect.Func, reflect.UnsafePointer, reflect.Ptr: //不支持的验证
+		return nil
+
 	}
 
-	return res
-}
-
-//验证字段
-func (this *Validation) validField(field string, fieldType reflect.StructField, fieldValue reflect.Value) error {
-
 	//零值验证
-	if this.IsEmpty(fieldValue.Interface()) {
-		if this.inArray(field, this.requireFields) {
-			return this.getError(field, fieldType.Tag.Get(this.Config.structFieldName), this.tranFunc(this.Config.messageTmpls["Required"]))
-		}
-		return nil
+	if this.inArray(parentFiledName, this.requireFields) && rv.IsZero() {
+		return this.getError(parentFiledName, structFiled.Tag.Get(this.Config.StructFieldName), this.Config.TranFunc(this.Config.messageTmpls["Required"]))
 	}
 
 	//定义了验证函数
-	if fieldType.Tag.Get(this.Config.structTagField) != "" {
-		funcsMap := this.parseFunc(fieldType.Tag.Get(this.Config.structTagField))
+	if this.getTagString(parentFiledName, structFiled.Tag) != "" {
+
+		//当前字段需要执行的验证函数
+		funcsMap := this.parseFunc(structFiled.Tag.Get(this.Config.StructTagField))
 		for k, v := range funcsMap {
 			if tmpFunc, ok := this.Config.validFuns[k]; ok {
-				if !tmpFunc(fieldValue.Interface(), v...) {
-					//验证未通过
-					name := fieldType.Tag.Get(this.Config.structFieldName)
+				//验证未通过
+				if !tmpFunc(rv.Interface(), v...) {
+					name := structFiled.Tag.Get(this.Config.StructFieldName)
 					if msg, ok := this.Config.messageTmpls[k]; ok {
-						//设置了提示信息
+						//定义了验证不通过的错误消息
 						formatParams := []interface{}{}
 						for _, v1 := range v {
 							formatParams = append(formatParams, v1)
-
 						}
-						msg = this.tranFunc(msg, formatParams)
-						return this.getError(field, name, msg)
+						msg = this.Config.TranFunc(msg, formatParams...)
+						return this.getError(parentFiledName, name, msg)
 					} else {
-						return this.getError(field, name, this.tranFunc("验证不通过"))
+						return this.getError(parentFiledName, name, this.Config.TranFunc("verification failed"))
 					}
-
 				}
 			}
 
@@ -202,11 +170,20 @@ func (this *Validation) validField(field string, fieldType reflect.StructField, 
 	}
 
 	return nil
+}
 
+//获取字段tag
+func (this *Validation) getTagString(fieldName string, structTag reflect.StructTag) string {
+	//自定义配置优先
+	if tag, ok := this.fieldTag[fieldName]; ok {
+		structTag = reflect.StructTag(tag)
+	}
+
+	return structTag.Get(this.Config.StructTagField)
 }
 
 //解析函数返回函数名和参数的k-v结构
-func (this *Validation) parseFunc(structTag string) map[string][]string {
+func (this *Validation) parseFunc(structTag string) map[string][]string /*函数名=>参数*/ {
 	funcs := strings.Split(structTag, ";")
 	funcsMap := make(map[string][]string)
 	for _, v := range funcs {
@@ -233,61 +210,6 @@ func (this *Validation) parseFunc(structTag string) map[string][]string {
 	}
 
 	return funcsMap
-}
-
-//判定是否为结构体
-func (this *Validation) IsStruct(t reflect.Type) bool {
-	return t.Kind() == reflect.Struct
-}
-
-//判定是否为结构体指针
-func (this *Validation) IsStructPtr(t reflect.Type) bool {
-	return t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct
-}
-
-//获取结构体或者指针的类型和值
-func (this *Validation) GetStructTV(obj interface{}) (reflect.Type, reflect.Value, error) {
-	objT := reflect.TypeOf(obj)
-	objV := reflect.ValueOf(obj)
-
-	switch {
-	case this.IsStruct(objT):
-	case this.IsStructPtr(objT):
-		objT = objT.Elem()
-		objV = objV.Elem()
-	default:
-		return objT, objV, fmt.Errorf("%v must be a struct or a struct pointer", obj)
-	}
-
-	return objT, objV, nil
-}
-
-//判定一个interface的值是否为空值
-func (this *Validation) IsEmpty(obj interface{}) bool {
-	if obj == nil {
-		return true
-	}
-
-	switch val := obj.(type) {
-	case string:
-		return len(strings.TrimSpace(val)) == 0
-	case bool:
-		return true
-	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-		return fmt.Sprintf("%d", val) == "0"
-	case float32:
-		return val == float32(0)
-	case float64:
-		return val == float64(0)
-	case time.Time:
-		return val.IsZero()
-	}
-
-	v := reflect.ValueOf(obj)
-	if v.Kind() == reflect.Slice {
-		return v.Len() == 0
-	}
-	return false
 }
 
 //判定某个值是否在数组里面

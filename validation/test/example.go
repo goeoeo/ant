@@ -1,22 +1,25 @@
-package validation
+package test
 
-/**
 import (
+	"github.com/phpdi/ant/validation"
 	"regexp"
 )
+
+var DefultValidationConfig *validation.ValidationConfig
 
 //定义示例
 func init() {
 	//注册函数
-	DefultValidationConfig = NewValidationConfig()
+	DefultValidationConfig = validation.NewValidationConfig()
 
+	//扩展函数
 	DefultValidationConfig.
 		RegisterFun("OpenTaskName", OpenTaskName, "只支持数字,字母,汉字,-或_或.的组合").
 		RegisterFun("Chn", Chn, "只支持汉字")
 }
 
-func NewValidate() *Validation {
-	return New()
+func NewValidate() *validation.Validation {
+	return validation.NewValidation(DefultValidationConfig)
 }
 
 //中文,数字,字母,下划线,点
@@ -39,5 +42,3 @@ func Chn(validValue interface{}, params ...string) bool {
 
 	return false
 }
-
-**/

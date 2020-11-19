@@ -1,133 +1,13 @@
 package validation
 
 import (
-	"encoding/json"
-	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
 	"unicode/utf8"
 )
 
-//验证配置
-type (
-	//目标，只要注册了方法就可以直接使用
-	ValidFun func(validValue interface{}, params ...string) bool
-
-	//验证器基础配置
-	ValidationConfig struct {
-		structTagField  string //结构体 验证器structTag名称
-		structFieldName string //结构体字段名称
-
-		validFuns map[string]ValidFun //验证函数
-
-		messageTmpls map[string]string //验证失败函数对应的模板消息
-
-	}
-)
-
-//验证函数未通过,对应的错误提示
-var (
-	DefultValidationConfig *ValidationConfig
-
-	MessageTmpls = map[string]string{
-		"Required":        "不能为空",
-		"Max":             "最大为%v",
-		"Min":             "最小为%v",
-		"Range":           "范围为%v到%v",
-		"MinSize":         "最小长度为%v",
-		"MaxSize":         "最大长度为%v",
-		"Length":          "长度必须为%v",
-		"Alpha":           "必须为字母",
-		"Numeric":         "必须为数字",
-		"AlphaNumeric":    "必须为字母、数字",
-		"AlphaDash":       "必须为字母、数字、-或_",
-		"Email":           "必须为有效的邮箱地址",
-		"IP":              "必须为有效的IP地址",
-		"Mobile":          "必须为有效的手机号码",
-		"Tel":             "必须为有效的固定电话",
-		"ZipCode":         "必须是有效的邮政编码",
-		"Mac":             "必须是有效的mac地址",
-		"ChnDash":         "只支持数字,字母,汉字,-或_的组合",
-		"ChnAlphaNumeric": "只支持数字,字母,汉字的组合",
-	}
-)
-
-func init() {
-	DefultValidationConfig = NewValidationConfig()
-}
-
-//生成默认的配置
-func NewValidationConfig() *ValidationConfig {
-	this := &ValidationConfig{
-		structTagField:  "valid",
-		structFieldName: "field",
-	}
-
-	this.validFuns = make(map[string]ValidFun)
-	this.messageTmpls = MessageTmpls
-
-	//注册函数
-	this.RegisterFun("Max", Max).
-		RegisterFun("Min", Min).
-		RegisterFun("Range", Range).
-		RegisterFun("MinSize", MinSize).
-		RegisterFun("MaxSize", MaxSize).
-		RegisterFun("Length", Length).
-		RegisterFun("Alpha", Alpha).
-		RegisterFun("Numeric", Numeric).
-		RegisterFun("AlphaNumeric", AlphaNumeric).
-		RegisterFun("AlphaDash", AlphaDash).
-		RegisterFun("Email", Email).
-		RegisterFun("IP", IP).
-		RegisterFun("Mobile", Mobile).
-		RegisterFun("Tel", Tel).
-		RegisterFun("ZipCode", ZipCode).
-		RegisterFun("Mac", Mac).
-		RegisterFun("ChnDash", ChnDash).
-		RegisterFun("ChnAlphaNumeric", ChnAlphaNumeric)
-
-	return this
-}
-
-//设置tag名
-func (this *ValidationConfig) SetTag(structTagField, structFieldName string) *ValidationConfig {
-	this.structTagField = structTagField
-	this.structFieldName = structFieldName
-	return this
-}
-
-//注册函数
-func (this *ValidationConfig) RegisterFun(funcName string, validFunc ValidFun, failMsg ...string) *ValidationConfig {
-	if len(this.validFuns) == 0 {
-		this.validFuns = make(map[string]ValidFun)
-	}
-	this.validFuns[funcName] = validFunc
-
-	if len(failMsg) > 0 {
-		this.SetMessageTmpls(map[string]string{funcName: failMsg[0]})
-	}
-
-	return this
-}
-
-//批量设置模板消息
-func (this *ValidationConfig) SetMessageTmpls(messageTmpls map[string]string) *ValidationConfig {
-
-	for k, v := range messageTmpls {
-		this.messageTmpls[k] = v
-	}
-
-	return this
-}
-
-//打印出所有支持的函数
-func (this *ValidationConfig) SupportFuns() {
-	tmp, _ := json.MarshalIndent(this.messageTmpls, "", "     ")
-	fmt.Println(string(tmp))
-}
-
-/*下面是验证函数，每个验证函数都需要注册*/
+//验证函数，通过ValidationConfig.RegisterFun进行注册
 
 //限制数字最大值
 func Max(validValue interface{}, params ...string) bool {

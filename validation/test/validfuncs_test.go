@@ -1,4 +1,4 @@
-package validation
+package test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 func TestMax(t *testing.T) {
 
 	a := StockHsas{}
-	v := New()
+	v := NewValidate()
 
 	//零值不验证
 	err := v.Valid(a)
