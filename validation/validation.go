@@ -99,12 +99,20 @@ func (this *Validation) Valid(obj interface{}) error {
 
 	l := objT.NumField()
 	for i := 0; i < l; i++ {
-		if err := this.validStructField("", objT.Field(i), objV.Field(i)); err != nil {
+		if err := this.validStructField("", objT.Field(i), this.reflectField(objV, i)); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (this *Validation) reflectField(v reflect.Value, i int) reflect.Value {
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	return v.Field(i)
 }
 
 //验证结构体字段
@@ -138,19 +146,19 @@ func (this *Validation) validStructField(parentFiledName string, structFiled ref
 
 	//零值验证
 	if this.inArray(parentFiledName, this.requireFields) && rv.IsZero() {
-		return this.getError(parentFiledName, structFiled.Tag.Get(this.Config.StructFieldName), this.Config.TranFunc(this.Config.messageTmpls["Required"]))
+		return this.getError(parentFiledName, this.getTagString(parentFiledName, structFiled.Tag, this.Config.StructFieldName), this.Config.TranFunc(this.Config.messageTmpls["Required"]))
 	}
 
 	//定义了验证函数
-	if this.getTagString(parentFiledName, structFiled.Tag) != "" {
+	if validTag := this.getTagString(parentFiledName, structFiled.Tag, this.Config.StructTagField); validTag != "" {
 
 		//当前字段需要执行的验证函数
-		funcsMap := this.parseFunc(structFiled.Tag.Get(this.Config.StructTagField))
+		funcsMap := this.parseFunc(validTag)
 		for k, v := range funcsMap {
 			if tmpFunc, ok := this.Config.validFuns[k]; ok {
 				//验证未通过
 				if !tmpFunc(rv.Interface(), v...) {
-					name := structFiled.Tag.Get(this.Config.StructFieldName)
+					name := this.getTagString(parentFiledName, structFiled.Tag, this.Config.StructFieldName)
 					if msg, ok := this.Config.messageTmpls[k]; ok {
 						//定义了验证不通过的错误消息
 						formatParams := []interface{}{}
@@ -173,13 +181,13 @@ func (this *Validation) validStructField(parentFiledName string, structFiled ref
 }
 
 //获取字段tag
-func (this *Validation) getTagString(fieldName string, structTag reflect.StructTag) string {
+func (this *Validation) getTagString(fieldName string, structTag reflect.StructTag, tag string) string {
 	//自定义配置优先
 	if tag, ok := this.fieldTag[fieldName]; ok {
 		structTag = reflect.StructTag(tag)
 	}
 
-	return structTag.Get(this.Config.StructTagField)
+	return structTag.Get(tag)
 }
 
 //解析函数返回函数名和参数的k-v结构
