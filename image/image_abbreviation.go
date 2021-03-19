@@ -1,7 +1,6 @@
 package image
 
 import (
-	"fmt"
 	"github.com/nfnt/resize"
 	"github.com/phpdi/ant/util"
 	"image"
@@ -53,8 +52,7 @@ func (this *ImageAbbreviation) MakeThumbnail(imagePath, savePath string) (err er
 
 	w, h := this.calculateRatioFit(width, height)
 
-	fmt.Println("width = ", width, " height = ", height)
-	fmt.Println("w = ", w, " h = ", h)
+
 
 	// 调用resize库进行图片缩放
 	m := resize.Resize(uint(w), uint(h), img, resize.Lanczos3)
