@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -8,6 +9,32 @@ import (
 )
 
 //验证函数，通过ValidationConfig.RegisterFun进行注册
+func Required(value interface{}, params ...string) bool {
+	var numEmpty bool //数字类型值为0 判定是否为空， true=判定为空
+	if len(params) > 0 {
+		numEmpty = (params[0] == "true")
+	}
+
+	switch vt := value.(type) {
+	case string:
+		return vt != ""
+	case bool:
+		if !numEmpty {
+			return true
+		}
+
+		return vt
+	case int8, int16, int32, int64, int, uint8, uint16, uint32, uint64, uint, float32, float64:
+		if !numEmpty {
+			return true
+		}
+
+		//数字类型值为0 判定为空
+		return fmt.Sprintf("%v", vt) != "0"
+	}
+
+	return false
+}
 
 //限制数字最大值
 func Max(validValue interface{}, params ...string) bool {
