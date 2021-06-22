@@ -3,11 +3,12 @@ package validation
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 //验证配置
 type (
-	//目标，只要注册了方法就可以直接使用
+	//验证方法函数
 	ValidFun func(validValue interface{}, params ...string) bool
 
 	//翻译函数回调
@@ -15,6 +16,7 @@ type (
 
 	//验证器基础配置
 	ValidationConfig struct {
+		RequiredField   string //必填验证校验函数名
 		StructTagField  string //结构体 验证器structTag名称 valid
 		StructFieldName string //结构体字段名称 field
 
@@ -29,19 +31,23 @@ type (
 //生成默认的配置
 func NewValidationConfig() *ValidationConfig {
 	this := &ValidationConfig{
+		RequiredField:   "Required",
 		StructTagField:  "valid",
 		StructFieldName: "field",
 		validFuns:       make(map[string]ValidFun),
 		messageTmpls:    make(map[string]string),
 		TranFunc: func(format string, params ...interface{}) string {
+			num := strings.Count(format, `%v`)
+			if num == 0 {
+				return format
+			}
 			return fmt.Sprintf(format, params...)
 		},
 	}
 
-	this.SetMessageTmpls(map[string]string{"Required": "不能为空"})
-
 	//注册函数
-	this.RegisterFun("Max", Max, "最大为%v").
+	this.RegisterFun("Required", Required, "不能为空").
+		RegisterFun("Max", Max, "最大为%v").
 		RegisterFun("Min", Min, "最小为%v").
 		RegisterFun("Range", Range, "范围为%v到%v").
 		RegisterFun("MinSize", MinSize, "最小长度为%v").
@@ -58,7 +64,8 @@ func NewValidationConfig() *ValidationConfig {
 		RegisterFun("ZipCode", ZipCode, "必须是有效的邮政编码").
 		RegisterFun("Mac", Mac, "必须是有效的mac地址").
 		RegisterFun("ChnDash", ChnDash, "必须是数字,字母,汉字,-或_的组合").
-		RegisterFun("ChnAlphaNumeric", ChnAlphaNumeric, "必须是数字,字母,汉字的组合")
+		RegisterFun("ChnAlphaNumeric", ChnAlphaNumeric, "必须是数字,字母,汉字的组合").
+		RegisterFun("NumericDot", NumericDot, "必须是数字,点的组合")
 
 	return this
 }
@@ -91,4 +98,8 @@ func (this *ValidationConfig) SetMessageTmpls(messageTmpls map[string]string) *V
 func (this *ValidationConfig) SupportFuns() {
 	tmp, _ := json.MarshalIndent(this.messageTmpls, "", "     ")
 	fmt.Println(string(tmp))
+}
+
+func (this *ValidationConfig) GetMessageTmpls(key string) string {
+	return this.messageTmpls[key]
 }
