@@ -14,16 +14,17 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.15.2 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
-	github.com/phpdi/ant v0.0.0-20200917060621-03cb73e12831
+	github.com/phpdi/ant/redisutil v0.0.0-20210710113852-bb13b8ea732f
 	github.com/prometheus/client_golang v1.8.0 // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20200427203606-3cfed13b9966 // indirect
 	go.uber.org/zap v1.16.0 // indirect
-	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897 // indirect
-	golang.org/x/net v0.0.0-20201027133719-8eef5233e2a1 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/genproto v0.0.0-20201026171402-d4b8fe4fd877 // indirect
 	google.golang.org/grpc v1.33.1 // indirect
 	google.golang.org/grpc/examples v0.0.0-20201028002921-15a78f19307d // indirect
+	google.golang.org/protobuf v1.26.0 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
